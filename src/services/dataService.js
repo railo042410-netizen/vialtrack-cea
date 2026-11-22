@@ -1153,6 +1153,19 @@ export const dataService = {
     this.setActivatedLicense(code);
   },
 
+  /** Cierra la sesión de licencias en este dispositivo. */
+  logout() {
+    try {
+      localStorage.removeItem(ACTIVATED_LICENSE_KEY);
+      localStorage.removeItem(ACTIVATED_LICENSES_KEY);
+      localStorage.removeItem(SELECTED_LICENSE_KEY);
+      localStorage.removeItem(INSTRUCTOR_SESSION_KEY);
+    } catch {
+      // ignore
+    }
+    notifyDataChanged();
+  },
+
   /** Identificador estable de este equipo. */
   getDeviceId() {
     try {
