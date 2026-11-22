@@ -35,8 +35,9 @@ export const LicenseGate: React.FC<LicenseGateProps> = ({ onActivated }) => {
               Activar licencia
             </h1>
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-              Ingresa el código de licencia entregado por la oficina para usar el
-              registro de instructor en este dispositivo.
+              La licencia habilita toda la aplicación. Ingresa el código para
+              acceder al Panel de Oficina y gestionar licencias, instructores y
+              vehículos.
             </p>
           </div>
         </div>
@@ -85,8 +86,8 @@ export const LicenseGate: React.FC<LicenseGateProps> = ({ onActivated }) => {
         </form>
 
         <p className="mt-5 text-center text-[11px] text-slate-500 dark:text-slate-400">
-          Sin una licencia vigente no es posible registrar clases. El
-          administrador puede generar códigos en el Panel de Oficina.
+          Sin una licencia vigente no es posible usar la plataforma. El código
+          de administrador por defecto es REPORTVIAL-ADMIN.
         </p>
       </div>
     </div>

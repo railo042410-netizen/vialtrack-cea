@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   ClipboardEdit,
-  Crown,
   LayoutDashboard,
-  LogOut,
   Moon,
   Palette,
   Sun,
@@ -11,21 +9,18 @@ import {
 import { ClassRecord } from './types/cea';
 import { dataService } from './services/dataService';
 import { InstructorForm } from './components/InstructorForm';
+import { InstructorAccessGate } from './components/InstructorAccessGate';
 import { OfficeDashboard } from './components/OfficeDashboard';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { CloudSyncBadge } from './components/CloudSyncBadge';
 import { LicenseGate } from './components/LicenseGate';
-import { MasterPanel } from './components/MasterPanel';
-import { AuthScreen } from './components/AuthScreen';
-import { useAuth } from './hooks/useAuth';
 import { useCloudSync } from './hooks/useCloudSync';
-import { isCloudConfigured } from './services/supabase';
 import { COLOR_PALETTES, ColorPaletteId } from './utils/colorPalette';
 
-type ActiveView = 'instructor' | 'office' | 'master';
+type ActiveView = 'instructor' | 'office';
 
 export default function App() {
-  const [activeView, setActiveView] = useState<ActiveView>('instructor');
+  const [activeView, setActiveView] = useState<ActiveView>('office');
   const [records, setRecords] = useState<ClassRecord[]>(() =>
     dataService.getRecords()
   );
@@ -52,15 +47,15 @@ export default function App() {
   const [isLicensed, setIsLicensed] = useState<boolean>(() =>
     dataService.isDeviceLicensed()
   );
+  const [instructorReady, setInstructorReady] = useState<boolean>(() =>
+    dataService.isInstructorSessionValid()
+  );
   const cloudSync = useCloudSync();
-  const auth = useAuth();
-  const canOffice = !isCloudConfigured || auth.isAdmin;
-  const canMaster = isCloudConfigured && auth.isMaster;
 
-  // Los cambios en la nube (u otras pestañas) actualizan la vista en tiempo real.
   useEffect(() => {
     setRecords(dataService.getRecords());
     setIsLicensed(dataService.isDeviceLicensed());
+    setInstructorReady(dataService.isInstructorSessionValid());
   }, [cloudSync.dataVersion]);
 
   useEffect(() => {
@@ -76,11 +71,6 @@ export default function App() {
       // ignore
     }
   }, [isDark]);
-
-  useEffect(() => {
-    if (!canOffice && activeView === 'office') setActiveView('instructor');
-    if (!canMaster && activeView === 'master') setActiveView('instructor');
-  }, [canOffice, canMaster, activeView]);
 
   useEffect(() => {
     document.documentElement.dataset.palette = palette;
@@ -112,24 +102,23 @@ export default function App() {
   const handleClearAll = () => {
     const empty = dataService.clearAllData();
     setRecords(empty);
+    setInstructorReady(false);
     showToast('Datos vaciados · todo listo para empezar de cero');
   };
 
   const activePaletteMeta =
     COLOR_PALETTES.find((p) => p.id === palette) || COLOR_PALETTES[0];
 
-  if (isCloudConfigured && auth.loading) {
+  // La licencia controla TODA la app: sin ella no se ve ningún módulo.
+  if (!isLicensed) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-[#070B14]">
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Verificando sesión…
-        </p>
-      </div>
+      <LicenseGate
+        onActivated={() => {
+          setIsLicensed(true);
+          setActiveView('office');
+        }}
+      />
     );
-  }
-
-  if (isCloudConfigured && !auth.session) {
-    return <AuthScreen />;
   }
 
   return (
@@ -137,12 +126,11 @@ export default function App() {
       {/* Top Bar */}
       <header className="no-print sticky top-0 z-40 h-14 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/85 dark:bg-[#070B14]/85 backdrop-blur-md">
         <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-8 px-4 sm:px-6">
-          {/* Zone 1: Single-line brand wordmark */}
           <a
             href="#top"
             onClick={(e) => {
               e.preventDefault();
-              setActiveView('instructor');
+              setActiveView('office');
             }}
             className="font-display text-base sm:text-lg font-bold tracking-tight whitespace-nowrap shrink-0 bg-clip-text text-transparent"
             style={{ backgroundImage: 'var(--accent-gradient)' }}
@@ -150,11 +138,34 @@ export default function App() {
             REPORTEVIALCEA
           </a>
 
-          {/* Zone 2: Clean typographic navigation (Desktop) */}
           <nav
             aria-label="Vistas principales"
             className="hidden md:flex items-center gap-8 h-full"
           >
+            <button
+              type="button"
+              onClick={() => setActiveView('office')}
+              style={
+                activeView === 'office'
+                  ? { color: 'var(--accent-text)' }
+                  : undefined
+              }
+              className={`relative h-full inline-flex items-center gap-2 text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${
+                activeView === 'office'
+                  ? ''
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+              }`}
+            >
+              <LayoutDashboard className="w-4 h-4" />
+              <span>Panel de Oficina ({records.length})</span>
+              {activeView === 'office' && (
+                <span
+                  className="absolute inset-x-0 bottom-0 h-0.5 rounded-t-full"
+                  style={{ backgroundImage: 'var(--accent-gradient)' }}
+                />
+              )}
+            </button>
+
             <button
               type="button"
               onClick={() => setActiveView('instructor')}
@@ -178,61 +189,8 @@ export default function App() {
                 />
               )}
             </button>
-
-            {canOffice && (
-              <button
-                type="button"
-                onClick={() => setActiveView('office')}
-                style={
-                  activeView === 'office'
-                    ? { color: 'var(--accent-text)' }
-                    : undefined
-                }
-                className={`relative h-full inline-flex items-center gap-2 text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${
-                  activeView === 'office'
-                    ? ''
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-                }`}
-              >
-                <LayoutDashboard className="w-4 h-4" />
-                <span>Panel de Oficina ({records.length})</span>
-                {activeView === 'office' && (
-                  <span
-                    className="absolute inset-x-0 bottom-0 h-0.5 rounded-t-full"
-                    style={{ backgroundImage: 'var(--accent-gradient)' }}
-                  />
-                )}
-              </button>
-            )}
-
-            {canMaster && (
-              <button
-                type="button"
-                onClick={() => setActiveView('master')}
-                style={
-                  activeView === 'master'
-                    ? { color: 'var(--accent-text)' }
-                    : undefined
-                }
-                className={`relative h-full inline-flex items-center gap-2 text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${
-                  activeView === 'master'
-                    ? ''
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-                }`}
-              >
-                <Crown className="w-4 h-4" />
-                <span>Plataforma Maestra</span>
-                {activeView === 'master' && (
-                  <span
-                    className="absolute inset-x-0 bottom-0 h-0.5 rounded-t-full"
-                    style={{ backgroundImage: 'var(--accent-gradient)' }}
-                  />
-                )}
-              </button>
-            )}
           </nav>
 
-          {/* Zone 3: Primary utility actions */}
           <div className="flex items-center gap-2 shrink-0">
             <CloudSyncBadge
               configured={cloudSync.configured}
@@ -254,24 +212,11 @@ export default function App() {
                 <Moon className="w-4 h-4 text-indigo-600" />
               )}
             </button>
-            {isCloudConfigured && auth.user && (
-              <button
-                type="button"
-                onClick={() => void auth.signOut()}
-                title={auth.profile?.email || 'Cerrar sesión'}
-                aria-label="Cerrar sesión"
-                className="inline-flex items-center justify-center min-h-[40px] min-w-[40px] rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            )}
           </div>
         </div>
       </header>
 
-      {/* Main Content */}
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 pt-4 sm:pt-6">
-        {/* Interactive Color Palette Switcher */}
         <div className="no-print mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm px-4 py-2.5">
           <div className="flex items-center gap-2.5 text-xs">
             <Palette
@@ -327,22 +272,7 @@ export default function App() {
           </div>
         </div>
 
-        {activeView === 'master' && canMaster ? (
-          <MasterPanel />
-        ) : activeView === 'instructor' ? (
-          isLicensed ? (
-            <InstructorForm
-              onRecordSaved={handleRecordSaved}
-              activePaletteInk={activePaletteMeta.inkHex}
-              onNavigateToOffice={() => {
-                setActiveView('office');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-            />
-          ) : (
-            <LicenseGate onActivated={() => setIsLicensed(true)} />
-          )
-        ) : (
+        {activeView === 'office' ? (
           <OfficeDashboard
             records={records}
             onDeleteRecord={handleDeleteRecord}
@@ -352,15 +282,54 @@ export default function App() {
               window.scrollTo({ top: 0, behavior: 'smooth' });
             }}
           />
+        ) : instructorReady ? (
+          <InstructorForm
+            onRecordSaved={handleRecordSaved}
+            activePaletteInk={activePaletteMeta.inkHex}
+            onNavigateToOffice={() => {
+              setActiveView('office');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        ) : (
+          <InstructorAccessGate
+            onActivated={() => setInstructorReady(true)}
+            onNavigateToOffice={() => {
+              setActiveView('office');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
         )}
       </main>
 
-      {/* Mobile Bottom Thumb-Zone Navigation */}
       <nav
         aria-label="Navegación móvil"
         className="no-print md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#070B14]/95 backdrop-blur-md pb-safe"
       >
-        <div className="grid grid-cols-3 h-14">
+        <div className="grid grid-cols-2 h-14">
+          <button
+            type="button"
+            onClick={() => {
+              setActiveView('office');
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            style={
+              activeView === 'office' ? { color: 'var(--accent-text)' } : undefined
+            }
+            className={`relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors ${
+              activeView === 'office' ? '' : 'text-slate-500 dark:text-slate-400'
+            }`}
+          >
+            {activeView === 'office' && (
+              <span
+                className="absolute top-0 inset-x-6 h-0.5 rounded-b-full"
+                style={{ backgroundImage: 'var(--accent-gradient)' }}
+              />
+            )}
+            <LayoutDashboard className="w-5 h-5" />
+            <span>Panel Oficina</span>
+          </button>
+
           <button
             type="button"
             onClick={() => {
@@ -373,9 +342,7 @@ export default function App() {
                 : undefined
             }
             className={`relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors ${
-              activeView === 'instructor'
-                ? ''
-                : 'text-slate-500 dark:text-slate-400'
+              activeView === 'instructor' ? '' : 'text-slate-500 dark:text-slate-400'
             }`}
           >
             {activeView === 'instructor' && (
@@ -387,72 +354,9 @@ export default function App() {
             <ClipboardEdit className="w-5 h-5" />
             <span>Registro Instructor</span>
           </button>
-
-          {canOffice ? (
-            <button
-              type="button"
-              onClick={() => {
-                setActiveView('office');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              style={
-                activeView === 'office'
-                  ? { color: 'var(--accent-text)' }
-                  : undefined
-              }
-              className={`relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors ${
-                activeView === 'office'
-                  ? ''
-                  : 'text-slate-500 dark:text-slate-400'
-              }`}
-            >
-              {activeView === 'office' && (
-                <span
-                  className="absolute top-0 inset-x-6 h-0.5 rounded-b-full"
-                  style={{ backgroundImage: 'var(--accent-gradient)' }}
-                />
-              )}
-              <LayoutDashboard className="w-5 h-5" />
-              <span>Panel Oficina ({records.length})</span>
-            </button>
-          ) : (
-            <div />
-          )}
-
-          {canMaster ? (
-            <button
-              type="button"
-              onClick={() => {
-                setActiveView('master');
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }}
-              style={
-                activeView === 'master'
-                  ? { color: 'var(--accent-text)' }
-                  : undefined
-              }
-              className={`relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors ${
-                activeView === 'master'
-                  ? ''
-                  : 'text-slate-500 dark:text-slate-400'
-              }`}
-            >
-              {activeView === 'master' && (
-                <span
-                  className="absolute top-0 inset-x-6 h-0.5 rounded-b-full"
-                  style={{ backgroundImage: 'var(--accent-gradient)' }}
-                />
-              )}
-              <Crown className="w-5 h-5" />
-              <span>Maestra</span>
-            </button>
-          ) : (
-            <div />
-          )}
         </div>
       </nav>
 
-      {/* Toast Feedback */}
       {toastMessage && (
         <div
           role="status"

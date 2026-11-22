@@ -22,6 +22,7 @@ const STORAGE_KEYS = {
 const OUTBOX_KEY = 'vialtrack_cea_outbox_v1';
 const CLOUD_SEEDED_KEY = 'vialtrack_cea_cloud_seeded_v1';
 const ACTIVATED_LICENSE_KEY = 'vialtrack_cea_activated_license_v1';
+const INSTRUCTOR_SESSION_KEY = 'vialtrack_cea_instructor_session_v1';
 
 // Código de administración: da acceso sin consumir licencia comercial.
 const ADMIN_LICENSE_CODE =
@@ -608,7 +609,7 @@ async function prepareCloud() {
   if (!supabase || cloudReady) return;
 
   try {
-    const [records, instructors, vehicles, licenses, subaccounts] =
+    let [records, instructors, vehicles, licenses, subaccounts] =
       await Promise.all([
         fetchTable(CLOUD_COLLECTIONS.records),
         fetchTable(CLOUD_COLLECTIONS.instructors),
@@ -634,7 +635,23 @@ async function prepareCloud() {
         subaccounts: readStorage(STORAGE_KEYS.SUBACCOUNTS, () => []),
       });
       localStorage.setItem(CLOUD_SEEDED_KEY, '1');
+      [records, instructors, vehicles, licenses, subaccounts] =
+        await Promise.all([
+          fetchTable(CLOUD_COLLECTIONS.records),
+          fetchTable(CLOUD_COLLECTIONS.instructors),
+          fetchTable(CLOUD_COLLECTIONS.vehicles),
+          fetchTable(CLOUD_COLLECTIONS.licenses),
+          fetchTable(CLOUD_COLLECTIONS.subaccounts),
+        ]);
     }
+
+    // La nube es la fuente de verdad al iniciar: hidrata la caché local.
+    mergeCloudSnapshot('records', records);
+    mergeCloudSnapshot('instructors', instructors);
+    mergeCloudSnapshot('vehicles', vehicles);
+    mergeCloudSnapshot('licenses', licenses);
+    mergeCloudSnapshot('subaccounts', subaccounts);
+
     cloudReady = true;
     syncState = { ...syncState, error: null };
     notifySync();
@@ -1036,6 +1053,47 @@ export const dataService = {
     return Boolean(this.validateLicenseCode(this.getActivatedCode()));
   },
 
+  /** Sesión del instructor activado en este dispositivo. */
+  getInstructorSession() {
+    try {
+      return JSON.parse(localStorage.getItem(INSTRUCTOR_SESSION_KEY) || 'null');
+    } catch {
+      return null;
+    }
+  },
+
+  /** Guarda la sesión del instructor en este dispositivo (activación única). */
+  setInstructorSession(session) {
+    try {
+      localStorage.setItem(INSTRUCTOR_SESSION_KEY, JSON.stringify(session));
+    } catch {
+      // ignore
+    }
+    notifyDataChanged();
+  },
+
+  /** Verifica nombre + cédula contra los instructores registrados en oficina. */
+  validateInstructor(name, documentId) {
+    const cleanName = (name || '').trim().toLowerCase();
+    const cleanDoc = (documentId || '').trim();
+    if (!cleanName || !cleanDoc) return null;
+    return (
+      this.getInstructors().find(
+        (i) =>
+          i.documentId.trim() === cleanDoc &&
+          i.name.trim().toLowerCase() === cleanName
+      ) || null
+    );
+  },
+
+  /** ¿La sesión guardada sigue correspondiendo a un instructor registrado? */
+  isInstructorSessionValid() {
+    const session = this.getInstructorSession();
+    return Boolean(
+      session && this.validateInstructor(session.name, session.documentId)
+    );
+  },
+
   /**
    * Vacía por completo los datos locales y de la nube para empezar de cero.
    * @returns {import('../types/cea').ClassRecord[]}
@@ -1054,6 +1112,7 @@ export const dataService = {
     localStorage.setItem(STORAGE_KEYS.LICENSES, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.SUBACCOUNTS, JSON.stringify([]));
     localStorage.removeItem(ACTIVATED_LICENSE_KEY);
+    localStorage.removeItem(INSTRUCTOR_SESSION_KEY);
     localStorage.setItem(CLOUD_SEEDED_KEY, '1');
     enqueue({ collection: 'all', type: 'reset_demo', docId: 'empty', payload: empty });
     notifyDataChanged();

@@ -16,7 +16,7 @@ import {
   Trash2,
   UserCheck,
   UserPlus,
-  Users,
+  KeyRound,
   UserX,
   X,
   XCircle,
@@ -31,7 +31,7 @@ import {
 } from '../types/cea';
 import { dataService, exportRecordsToCSV } from '../services/dataService';
 import { RecordDetailModal } from './RecordDetailModal';
-import { UserManager } from './UserManager';
+import { LicenseManager } from './LicenseManager';
 import { useSyncState } from '../hooks/useCloudSync';
 import { CATEGORY_COLOR_THEMES } from '../utils/colorPalette';
 
@@ -158,7 +158,7 @@ export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
   const [showTodayByInstructor, setShowTodayByInstructor] = useState(false);
   const [showMonthByInstructor, setShowMonthByInstructor] = useState(false);
 
-  const [showUsersModal, setShowUsersModal] = useState(false);
+  const [showLicenseModal, setShowLicenseModal] = useState(false);
 
   // Fleet plates manager modal state
   const [showFleetModal, setShowFleetModal] = useState(false);
@@ -409,11 +409,11 @@ export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
         <div className="flex flex-wrap items-center gap-2.5">
           <button
             type="button"
-            onClick={() => setShowUsersModal(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-indigo-300/70 dark:border-indigo-700/60 bg-indigo-50/70 dark:bg-indigo-950/30 px-3.5 py-2.5 text-xs font-semibold text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/50 transition-colors min-h-[44px] whitespace-nowrap shrink-0"
+            onClick={() => setShowLicenseModal(true)}
+            className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300/70 dark:border-amber-700/60 bg-amber-50/70 dark:bg-amber-950/30 px-3.5 py-2.5 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors min-h-[44px] whitespace-nowrap shrink-0"
           >
-            <Users className="w-3.5 h-3.5" />
-            <span>Usuarios</span>
+            <KeyRound className="w-3.5 h-3.5" />
+            <span>Licencia</span>
           </button>
 
           <button
@@ -1034,8 +1034,8 @@ export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
         )}
       </section>
 
-      {/* Users Management Modal */}
-      {showUsersModal && <UserManager onClose={() => setShowUsersModal(false)} />}
+      {/* License Management Modal */}
+      {showLicenseModal && <LicenseManager onClose={() => setShowLicenseModal(false)} />}
 
       {/* Detail & Signatures Modal */}
       <RecordDetailModal
@@ -1194,7 +1194,7 @@ export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
                   Instructores de la Academia
                 </h2>
                 <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-                  Registra y administra los instructores disponibles en el formulario móvil.
+                  Registra a los instructores con su nombre y cédula: solo ellos podrán activar el módulo móvil.
                 </p>
               </div>
               <button
