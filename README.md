@@ -12,7 +12,9 @@ PWA mobile-first para el control digital de asistencia, horas dictadas, kilometr
 
 ## Licencias
 
-El módulo móvil exige activar un código de licencia antes de registrar. En el Panel de Oficina → **Licencias** puedes generar códigos, programar el cupo máximo de instructores y vehículos, definir vencimiento y activar una licencia global. El código de administración por defecto es `REPORTVIAL-ADMIN` (configurable con `VITE_ADMIN_LICENSE_KEY`).
+La licencia habilita **toda la app**: al abrirla se pide el código y luego se entra al Panel de Oficina. Desde el panel (botón **Licencia**) se generan códigos, se programan los cupos de instructores y vehículos, el vencimiento y se activa la licencia global.
+
+Los instructores se registran en el Panel de Oficina con **nombre y cédula**. En el celular, el módulo *Registro de Instructor* se activa una sola vez ingresando ese nombre y cédula. El código de administración por defecto es `REPORTVIAL-ADMIN` (configurable con `VITE_ADMIN_LICENSE_KEY`).
 
 ## Ejecutar localmente
 
