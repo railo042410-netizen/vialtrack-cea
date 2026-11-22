@@ -522,7 +522,18 @@ export const InstructorForm: React.FC<InstructorFormProps> = ({
                 <select
                   id="select-instructor"
                   value={instructorId}
-                  onChange={(e) => setInstructorId(e.target.value)}
+                  onChange={(e) => {
+                    const selected = instructors.find(
+                      (i) => i.id === e.target.value
+                    );
+                    setInstructorId(e.target.value);
+                    setInstructorDocument(selected?.documentId || '');
+                    setErrors((p) => ({
+                      ...p,
+                      instructor: '',
+                      instructorDocument: '',
+                    }));
+                  }}
                   className="accent-focus w-full min-h-[46px] rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 text-sm text-slate-900 dark:text-slate-100 transition-all"
                 >
                   {instructors.length === 0 ? (
@@ -548,13 +559,13 @@ export const InstructorForm: React.FC<InstructorFormProps> = ({
                   id="input-instructor-doc"
                   type="text"
                   value={instructorDocument}
-                  onChange={(e) => {
-                    setInstructorDocument(e.target.value);
-                    setErrors((p) => ({ ...p, instructorDocument: '' }));
-                  }}
-                  placeholder="Ej. 79.845.210"
-                  className="accent-focus w-full min-h-[46px] rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 text-sm font-mono tabular-nums text-slate-900 dark:text-slate-100 transition-all"
+                  readOnly
+                  placeholder="Se completa al elegir el instructor"
+                  className="accent-focus w-full min-h-[46px] rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-950 px-3.5 text-sm font-mono tabular-nums text-slate-700 dark:text-slate-300 transition-all"
                 />
+                <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
+                  Se carga automáticamente al elegir el instructor.
+                </p>
                 {errors.instructorDocument && (
                   <p className="mt-1 text-xs text-rose-500">
                     {errors.instructorDocument}
