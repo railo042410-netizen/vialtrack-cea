@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   ClipboardEdit,
+  KeyRound,
   LayoutDashboard,
   Moon,
   Palette,
@@ -44,6 +45,7 @@ export default function App() {
     return 'aurora';
   });
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [showLicenseSwitcher, setShowLicenseSwitcher] = useState(false);
   const [isLicensed, setIsLicensed] = useState<boolean>(() =>
     dataService.isDeviceLicensed()
   );
@@ -51,6 +53,11 @@ export default function App() {
     dataService.isInstructorSessionValid()
   );
   const cloudSync = useCloudSync();
+  const selectedLicense = dataService.validateLicenseCode(
+    dataService.getSelectedLicenseCode()
+  );
+  const selectedLicenseName = selectedLicense?.clientName || 'Administración';
+  const officeAllowed = dataService.canUseOffice(selectedLicense);
 
   useEffect(() => {
     setRecords(dataService.getRecords());
@@ -80,6 +87,15 @@ export default function App() {
       // ignore
     }
   }, [palette]);
+
+  const handleLicenseActivated = () => {
+    setIsLicensed(true);
+    setRecords(dataService.getRecords());
+    setInstructorReady(dataService.isInstructorSessionValid());
+    setActiveView(
+      window.matchMedia('(min-width: 768px)').matches ? 'office' : 'instructor'
+    );
+  };
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
@@ -112,12 +128,7 @@ export default function App() {
   // La licencia controla TODA la app: sin ella no se ve ningún módulo.
   if (!isLicensed) {
     return (
-      <LicenseGate
-        onActivated={() => {
-          setIsLicensed(true);
-          setActiveView('office');
-        }}
-      />
+      <LicenseGate onActivated={handleLicenseActivated} />
     );
   }
 
@@ -144,7 +155,16 @@ export default function App() {
           >
             <button
               type="button"
-              onClick={() => setActiveView('office')}
+              onClick={() => {
+                if (!officeAllowed) {
+                  showToast('Esta licencia pertenece a otro equipo de oficina');
+                  return;
+                }
+                if (selectedLicense) {
+                  dataService.bindOfficeDevice(selectedLicense);
+                }
+                setActiveView('office');
+              }}
               style={
                 activeView === 'office'
                   ? { color: 'var(--accent-text)' }
@@ -192,6 +212,15 @@ export default function App() {
           </nav>
 
           <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowLicenseSwitcher(true)}
+              title="Cambiar o agregar licencia"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/90 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[40px] max-w-[180px]"
+            >
+              <KeyRound className="w-4 h-4 shrink-0" />
+              <span className="truncate">{selectedLicenseName}</span>
+            </button>
             <CloudSyncBadge
               configured={cloudSync.configured}
               online={cloudSync.online}
@@ -306,30 +335,7 @@ export default function App() {
         aria-label="Navegación móvil"
         className="no-print md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#070B14]/95 backdrop-blur-md pb-safe"
       >
-        <div className="grid grid-cols-2 h-14">
-          <button
-            type="button"
-            onClick={() => {
-              setActiveView('office');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            style={
-              activeView === 'office' ? { color: 'var(--accent-text)' } : undefined
-            }
-            className={`relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors ${
-              activeView === 'office' ? '' : 'text-slate-500 dark:text-slate-400'
-            }`}
-          >
-            {activeView === 'office' && (
-              <span
-                className="absolute top-0 inset-x-6 h-0.5 rounded-b-full"
-                style={{ backgroundImage: 'var(--accent-gradient)' }}
-              />
-            )}
-            <LayoutDashboard className="w-5 h-5" />
-            <span>Panel Oficina</span>
-          </button>
-
+        <div className="grid grid-cols-1 h-14">
           <button
             type="button"
             onClick={() => {
@@ -356,6 +362,13 @@ export default function App() {
           </button>
         </div>
       </nav>
+
+      {showLicenseSwitcher && (
+        <LicenseGate
+          onActivated={handleLicenseActivated}
+          onClose={() => setShowLicenseSwitcher(false)}
+        />
+      )}
 
       {toastMessage && (
         <div

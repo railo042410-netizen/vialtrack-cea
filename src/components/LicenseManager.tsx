@@ -106,13 +106,8 @@ export const LicenseManager: React.FC<LicenseManagerProps> = ({ onClose }) => {
     setError('');
   };
 
-  const handleActivate = (id: string) => {
-    dataService.activateLicense(id);
-    setLicenses(dataService.getLicenses());
-  };
-
   const handleToggleEnabled = (license: License) => {
-    dataService.updateLicense({ ...license, enabled: !license.enabled });
+    dataService.setLicenseEnabled(license.id, !license.enabled);
     setLicenses(dataService.getLicenses());
   };
 
@@ -254,17 +249,13 @@ export const LicenseManager: React.FC<LicenseManagerProps> = ({ onClose }) => {
             licenses.map((license) => {
               const expired = license.expiresAt < today;
               const status = !license.enabled
-                ? 'Desactivada'
+                ? 'Pausada'
                 : expired
                   ? 'Vencida'
-                  : license.isActive
-                    ? 'Activa'
-                    : 'Inactiva';
-              const statusStyle = license.enabled && !expired && license.isActive
+                  : 'Activa';
+              const statusStyle = license.enabled && !expired
                 ? 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-300'
-                : expired || !license.enabled
-                  ? 'bg-rose-500/10 text-rose-700 dark:text-rose-300'
-                  : 'bg-slate-500/10 text-slate-600 dark:text-slate-300';
+                : 'bg-rose-500/10 text-rose-700 dark:text-rose-300';
 
               return (
                 <div key={license.id} className="p-3.5 space-y-2.5">
@@ -296,15 +287,6 @@ export const LicenseManager: React.FC<LicenseManagerProps> = ({ onClose }) => {
                       </button>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
-                      <button
-                        type="button"
-                        onClick={() => handleActivate(license.id)}
-                        disabled={!license.enabled || expired}
-                        title="Activar esta licencia"
-                        className="rounded-lg border border-slate-300 dark:border-slate-700 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 min-h-[36px]"
-                      >
-                        Activar
-                      </button>
                       <button
                         type="button"
                         onClick={() => handleEdit(license)}
@@ -355,8 +337,9 @@ export const LicenseManager: React.FC<LicenseManagerProps> = ({ onClose }) => {
         </div>
 
         <p className="text-[11px] text-slate-500 dark:text-slate-400">
-          La licencia activa define los cupos globales. El código de administración
-          permite acceder al registro sin consumir una licencia comercial.
+          Varias licencias pueden estar activas al mismo tiempo y cada una tiene
+          sus propios instructores, vehículos y registros. El Panel de Oficina de
+          cada licencia queda vinculado al primer equipo que lo abra.
         </p>
       </div>
     </div>

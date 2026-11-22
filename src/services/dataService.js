@@ -22,7 +22,10 @@ const STORAGE_KEYS = {
 const OUTBOX_KEY = 'vialtrack_cea_outbox_v1';
 const CLOUD_SEEDED_KEY = 'vialtrack_cea_cloud_seeded_v1';
 const ACTIVATED_LICENSE_KEY = 'vialtrack_cea_activated_license_v1';
+const ACTIVATED_LICENSES_KEY = 'vialtrack_cea_activated_licenses_v1';
+const SELECTED_LICENSE_KEY = 'vialtrack_cea_selected_license_v1';
 const INSTRUCTOR_SESSION_KEY = 'vialtrack_cea_instructor_session_v1';
+const DEVICE_ID_KEY = 'vialtrack_cea_device_id_v1';
 
 // Código de administración: da acceso sin consumir licencia comercial.
 const ADMIN_LICENSE_CODE =
@@ -758,7 +761,9 @@ export const dataService = {
    * @returns {import('../types/cea').ClassRecord[]}
    */
   getRecords() {
-    const records = readStorage(STORAGE_KEYS.RECORDS, () => []);
+    const records = this.filterByLicense(
+      readStorage(STORAGE_KEYS.RECORDS, () => [])
+    );
     return [...records].sort((a, b) => {
       const dateCmp = `${b.date}T${b.startTime}`.localeCompare(`${a.date}T${a.startTime}`);
       if (dateCmp !== 0) return dateCmp;
@@ -778,6 +783,7 @@ export const dataService = {
       id: `REG-${new Date().getFullYear()}-${String(1013 + records.length).padStart(4, '0')}`,
       createdAt: new Date().toISOString(),
       syncStatus: isCloudConfigured ? 'pendiente_local' : 'sincronizado',
+      licenseId: this.getCurrentLicenseId() || undefined,
     };
 
     const updated = [newRecord, ...records];
@@ -806,7 +812,9 @@ export const dataService = {
    * @returns {import('../types/cea').Instructor[]}
    */
   getInstructors() {
-    return readStorage(STORAGE_KEYS.INSTRUCTORS, () => DEFAULT_INSTRUCTORS);
+    return this.filterByLicense(
+      readStorage(STORAGE_KEYS.INSTRUCTORS, () => DEFAULT_INSTRUCTORS)
+    );
   },
 
   /**
@@ -821,6 +829,7 @@ export const dataService = {
       name: name.trim(),
       documentId: documentId.trim(),
       specialties: specialties && specialties.length > 0 ? specialties : ['B1'],
+      licenseId: this.getCurrentLicenseId() || undefined,
     };
     const updated = [...list, created];
     localStorage.setItem(STORAGE_KEYS.INSTRUCTORS, JSON.stringify(updated));
@@ -847,7 +856,9 @@ export const dataService = {
    * @returns {import('../types/cea').FleetVehicle[]}
    */
   getVehicles() {
-    return readStorage(STORAGE_KEYS.VEHICLES, () => DEFAULT_VEHICLES);
+    return this.filterByLicense(
+      readStorage(STORAGE_KEYS.VEHICLES, () => DEFAULT_VEHICLES)
+    );
   },
 
   /**
@@ -866,6 +877,7 @@ export const dataService = {
       plate: cleanPlate,
       model: model.trim() || `Vehículo Cat. ${category}`,
       category,
+      licenseId: this.getCurrentLicenseId() || undefined,
     };
     const updated = [...list, created];
     localStorage.setItem(STORAGE_KEYS.VEHICLES, JSON.stringify(updated));
@@ -967,26 +979,31 @@ export const dataService = {
   },
 
   /**
-   * Marca una licencia como la activa global (solo una puede estarlo).
+   * Habilita o pausa una licencia. Varias pueden estar activas a la vez.
    * @param {string} id
+   * @param {boolean} enabled
    */
-  activateLicense(id) {
-    const updated = this.getLicenses().map((l) => ({
-      ...l,
-      isActive: l.id === id,
-    }));
+  setLicenseEnabled(id, enabled) {
+    const updated = this.getLicenses().map((l) =>
+      l.id === id ? { ...l, enabled, isActive: enabled } : l
+    );
     localStorage.setItem(STORAGE_KEYS.LICENSES, JSON.stringify(updated));
     const target = updated.find((l) => l.id === id);
-    for (const license of updated) {
+    if (target) {
       enqueue({
         collection: 'licenses',
         type: 'save',
-        docId: license.id,
-        payload: license,
+        docId: id,
+        payload: target,
       });
     }
     notifyDataChanged();
     return target || null;
+  },
+
+  /** Compatibilidad: activar una licencia la habilita sin desactivar las demás. */
+  activateLicense(id) {
+    return this.setLicenseEnabled(id, true);
   },
 
   /**
@@ -1001,14 +1018,21 @@ export const dataService = {
     return filtered;
   },
 
-  /** Licencia global activa y vigente, o null. */
+  /** Licencia seleccionada en este dispositivo (null en modo administrador). */
   getActiveLicense() {
-    const today = formatDateOffset(0);
-    return (
-      this.getLicenses().find(
-        (l) => l.isActive && l.enabled && l.expiresAt >= today
-      ) || null
-    );
+    const selected = this.validateLicenseCode(this.getSelectedLicenseCode());
+    return selected && selected.id ? selected : null;
+  },
+
+  getCurrentLicenseId() {
+    return this.getActiveLicense()?.id || null;
+  },
+
+  /** Filtra un catálogo para que cada licencia vea solo sus datos. */
+  filterByLicense(items) {
+    const id = this.getCurrentLicenseId();
+    if (!id) return items;
+    return items.filter((item) => item.licenseId === id);
   },
 
   /** Valida un código para activar una licencia en este dispositivo. */
@@ -1029,28 +1053,108 @@ export const dataService = {
     );
   },
 
-  /** Código activado en este dispositivo. */
-  getActivatedCode() {
+  /** Códigos de licencia activados en este dispositivo. */
+  getActivatedLicenses() {
     try {
-      return localStorage.getItem(ACTIVATED_LICENSE_KEY) || '';
+      const list = JSON.parse(
+        localStorage.getItem(ACTIVATED_LICENSES_KEY) || '[]'
+      );
+      return Array.isArray(list) ? list : [];
+    } catch {
+      return [];
+    }
+  },
+
+  /** Activa una licencia adicional en este dispositivo y la selecciona. */
+  setActivatedLicense(code) {
+    const clean = (code || '').trim().toUpperCase();
+    if (!this.validateLicenseCode(clean)) return false;
+    const list = this.getActivatedLicenses();
+    if (!list.includes(clean)) {
+      list.push(clean);
+      try {
+        localStorage.setItem(ACTIVATED_LICENSES_KEY, JSON.stringify(list));
+      } catch {
+        // ignore
+      }
+    }
+    try {
+      localStorage.setItem(ACTIVATED_LICENSE_KEY, clean);
+    } catch {
+      // ignore
+    }
+    this.setSelectedLicenseCode(clean);
+    return true;
+  },
+
+  /** Código de licencia actualmente seleccionado. */
+  getSelectedLicenseCode() {
+    try {
+      const current = localStorage.getItem(SELECTED_LICENSE_KEY) || '';
+      if (current && this.validateLicenseCode(current)) return current;
+      const first = this.getActivatedLicenses().find((c) =>
+        this.validateLicenseCode(c)
+      );
+      if (first) localStorage.setItem(SELECTED_LICENSE_KEY, first);
+      return first || '';
     } catch {
       return '';
     }
   },
 
-  /** Guarda el código activado en este dispositivo. */
-  setActivatedCode(code) {
+  /** Cambia la licencia activa en este dispositivo. */
+  setSelectedLicenseCode(code) {
     try {
-      localStorage.setItem(ACTIVATED_LICENSE_KEY, code.trim().toUpperCase());
+      localStorage.setItem(SELECTED_LICENSE_KEY, (code || '').trim().toUpperCase());
     } catch {
       // ignore
     }
     notifyDataChanged();
   },
 
+  /** Compatibilidad con el activation anterior. */
+  getActivatedCode() {
+    return this.getSelectedLicenseCode();
+  },
+
+  setActivatedCode(code) {
+    this.setActivatedLicense(code);
+  },
+
+  /** Identificador estable de este equipo. */
+  getDeviceId() {
+    try {
+      let id = localStorage.getItem(DEVICE_ID_KEY);
+      if (!id) {
+        id =
+          typeof crypto !== 'undefined' && crypto.randomUUID
+            ? crypto.randomUUID()
+            : `dev-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+        localStorage.setItem(DEVICE_ID_KEY, id);
+      }
+      return id;
+    } catch {
+      return 'unknown-device';
+    }
+  },
+
+  /** ¿El Panel de Oficina de esta licencia puede usarse en este equipo? */
+  canUseOffice(license) {
+    if (!license || !license.id) return true; // modo administrador
+    return !license.officeDeviceId || license.officeDeviceId === this.getDeviceId();
+  },
+
+  /** Vincula el Panel de Oficina de una licencia al primer equipo que lo abre. */
+  bindOfficeDevice(license) {
+    if (!license || !license.id || license.officeDeviceId) return license;
+    const updated = { ...license, officeDeviceId: this.getDeviceId() };
+    this.updateLicense(updated);
+    return updated;
+  },
+
   /** ¿Este dispositivo tiene una licencia válida activada? */
   isDeviceLicensed() {
-    return Boolean(this.validateLicenseCode(this.getActivatedCode()));
+    return Boolean(this.validateLicenseCode(this.getSelectedLicenseCode()));
   },
 
   /** Sesión del instructor activado en este dispositivo. */
@@ -1112,6 +1216,8 @@ export const dataService = {
     localStorage.setItem(STORAGE_KEYS.LICENSES, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.SUBACCOUNTS, JSON.stringify([]));
     localStorage.removeItem(ACTIVATED_LICENSE_KEY);
+    localStorage.removeItem(ACTIVATED_LICENSES_KEY);
+    localStorage.removeItem(SELECTED_LICENSE_KEY);
     localStorage.removeItem(INSTRUCTOR_SESSION_KEY);
     localStorage.setItem(CLOUD_SEEDED_KEY, '1');
     enqueue({ collection: 'all', type: 'reset_demo', docId: 'empty', payload: empty });

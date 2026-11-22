@@ -26,6 +26,7 @@ import {
   ClassRecord,
   FleetVehicle,
   Instructor,
+  License,
   LICENSE_CATEGORIES,
   LicenseCategory,
 } from '../types/cea';
@@ -196,7 +197,7 @@ export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
       setFleetError(`La placa ${clean} ya existe en la flota.`);
       return;
     }
-    const activeLicense = dataService.getActiveLicense();
+    const activeLicense = dataService.getActiveLicense() as License | null;
     if (activeLicense && vehicles.length >= activeLicense.maxVehicles) {
       setFleetError(
         `Cupo de vehículos alcanzado (${activeLicense.maxVehicles}) según la licencia de ${activeLicense.clientName}.`
@@ -230,7 +231,7 @@ export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
       setInstructorError(`Ya existe un instructor con documento ${cleanDoc}.`);
       return;
     }
-    const activeLicense = dataService.getActiveLicense();
+    const activeLicense = dataService.getActiveLicense() as License | null;
     if (activeLicense && instructors.length >= activeLicense.maxInstructors) {
       setInstructorError(
         `Cupo de instructores alcanzado (${activeLicense.maxInstructors}) según la licencia de ${activeLicense.clientName}.`
