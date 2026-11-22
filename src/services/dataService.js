@@ -954,7 +954,8 @@ export const dataService = {
       maxVehicles: Math.max(0, Number(maxVehicles) || 0),
       expiresAt: expiresAt || '2099-12-31',
       enabled: true,
-      isActive: false,
+      isActive: true,
+      isMaster: false,
       createdAt: new Date().toISOString(),
     };
     const updated = [...list, created];
@@ -1001,6 +1002,25 @@ export const dataService = {
     return target || null;
   },
 
+  /** Designa una licencia como maestra (solo una puede serlo). */
+  setMasterLicense(id) {
+    const updated = this.getLicenses().map((l) => ({
+      ...l,
+      isMaster: l.id === id,
+    }));
+    localStorage.setItem(STORAGE_KEYS.LICENSES, JSON.stringify(updated));
+    for (const license of updated.filter((l) => l.isMaster)) {
+      enqueue({
+        collection: 'licenses',
+        type: 'save',
+        docId: license.id,
+        payload: license,
+      });
+    }
+    notifyDataChanged();
+    return updated.find((l) => l.id === id) || null;
+  },
+
   /** Compatibilidad: activar una licencia la habilita sin desactivar las demás. */
   activateLicense(id) {
     return this.setLicenseEnabled(id, true);
@@ -1026,6 +1046,18 @@ export const dataService = {
 
   getCurrentLicenseId() {
     return this.getActiveLicense()?.id || null;
+  },
+
+  /** Licencia maestra: desde ella se generan y activan las demás. */
+  getMasterLicense() {
+    return this.getLicenses().find((l) => l.isMaster) || null;
+  },
+
+  /** ¿La licencia seleccionada es la maestra? */
+  isMasterLicenseActive() {
+    const master = this.getMasterLicense();
+    const current = this.getActiveLicense();
+    return Boolean(master && current && master.id === current.id);
   },
 
   /** Filtra un catálogo para que cada licencia vea solo sus datos. */
@@ -1141,12 +1173,15 @@ export const dataService = {
   /** ¿El Panel de Oficina de esta licencia puede usarse en este equipo? */
   canUseOffice(license) {
     if (!license || !license.id) return true; // modo administrador
+    if (license.isMaster) return true; // la maestra abre en cualquier equipo
     return !license.officeDeviceId || license.officeDeviceId === this.getDeviceId();
   },
 
   /** Vincula el Panel de Oficina de una licencia al primer equipo que lo abre. */
   bindOfficeDevice(license) {
-    if (!license || !license.id || license.officeDeviceId) return license;
+    if (!license || !license.id || license.isMaster || license.officeDeviceId) {
+      return license;
+    }
     const updated = { ...license, officeDeviceId: this.getDeviceId() };
     this.updateLicense(updated);
     return updated;

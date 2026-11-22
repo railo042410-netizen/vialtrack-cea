@@ -38,6 +38,7 @@ import { CATEGORY_COLOR_THEMES } from '../utils/colorPalette';
 
 interface OfficeDashboardProps {
   records: ClassRecord[];
+  isMasterLicense: boolean;
   onDeleteRecord: (id: string) => void;
   onClearAll: () => void;
   onNavigateToForm: () => void;
@@ -140,6 +141,7 @@ function summarizeHoursByInstructor(
 
 export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
   records,
+  isMasterLicense,
   onDeleteRecord,
   onClearAll,
   onNavigateToForm,
@@ -408,14 +410,16 @@ export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => setShowLicenseModal(true)}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300/70 dark:border-amber-700/60 bg-amber-50/70 dark:bg-amber-950/30 px-3.5 py-2.5 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors min-h-[44px] whitespace-nowrap shrink-0"
-          >
-            <KeyRound className="w-3.5 h-3.5" />
-            <span>Licencia</span>
-          </button>
+          {isMasterLicense && (
+            <button
+              type="button"
+              onClick={() => setShowLicenseModal(true)}
+              className="inline-flex items-center gap-1.5 rounded-xl border border-amber-300/70 dark:border-amber-700/60 bg-amber-50/70 dark:bg-amber-950/30 px-3.5 py-2.5 text-xs font-semibold text-amber-700 dark:text-amber-300 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition-colors min-h-[44px] whitespace-nowrap shrink-0"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>Licencia maestra</span>
+            </button>
+          )}
 
           <button
             type="button"

@@ -29,6 +29,7 @@ export interface License {
   isActive: boolean;
   createdAt: string;
   officeDeviceId?: string;
+  isMaster?: boolean;
 }
 
 export interface ClassRecord {

@@ -106,6 +106,11 @@ export const LicenseManager: React.FC<LicenseManagerProps> = ({ onClose }) => {
     setError('');
   };
 
+  const handleSetMaster = (id: string) => {
+    dataService.setMasterLicense(id);
+    setLicenses(dataService.getLicenses());
+  };
+
   const handleToggleEnabled = (license: License) => {
     dataService.setLicenseEnabled(license.id, !license.enabled);
     setLicenses(dataService.getLicenses());
@@ -270,6 +275,11 @@ export const LicenseManager: React.FC<LicenseManagerProps> = ({ onClose }) => {
                         >
                           {status}
                         </span>
+                        {license.isMaster && (
+                          <span className="rounded-md bg-amber-500/15 px-2 py-0.5 text-[10px] font-bold text-amber-700 dark:text-amber-300">
+                            MAESTRA
+                          </span>
+                        )}
                       </div>
                       <button
                         type="button"
@@ -287,6 +297,16 @@ export const LicenseManager: React.FC<LicenseManagerProps> = ({ onClose }) => {
                       </button>
                     </div>
                     <div className="flex items-center gap-1 shrink-0">
+                      {!license.isMaster && (
+                        <button
+                          type="button"
+                          onClick={() => handleSetMaster(license.id)}
+                          title="Convertir en licencia maestra"
+                          className="rounded-lg border border-slate-300 dark:border-slate-700 px-2.5 py-1.5 text-[11px] font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 min-h-[36px]"
+                        >
+                          Hacer maestra
+                        </button>
+                      )}
                       <button
                         type="button"
                         onClick={() => handleEdit(license)}

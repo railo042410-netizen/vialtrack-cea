@@ -58,6 +58,7 @@ export default function App() {
   );
   const selectedLicenseName = selectedLicense?.clientName || 'Administración';
   const officeAllowed = dataService.canUseOffice(selectedLicense);
+  const isMasterLicense = dataService.isMasterLicenseActive();
 
   useEffect(() => {
     setRecords(dataService.getRecords());
@@ -304,6 +305,7 @@ export default function App() {
         {activeView === 'office' ? (
           <OfficeDashboard
             records={records}
+            isMasterLicense={isMasterLicense}
             onDeleteRecord={handleDeleteRecord}
             onClearAll={handleClearAll}
             onNavigateToForm={() => {
