@@ -60,42 +60,9 @@ function formatDateOffset(daysAgo) {
   return `${year}-${month}-${day}`;
 }
 
-const DEFAULT_INSTRUCTORS = [
-  {
-    id: 'inst-01',
-    name: 'Carlos Andrés Mendoza',
-    documentId: '79.845.210',
-    specialties: ['B1', 'C1', 'C2'],
-  },
-  {
-    id: 'inst-02',
-    name: 'Laura Sofía Ramírez',
-    documentId: '52.914.633',
-    specialties: ['A2', 'B1'],
-  },
-  {
-    id: 'inst-03',
-    name: 'Jhonathan David Ospina',
-    documentId: '1.018.442.890',
-    specialties: ['C1', 'C2', 'C3'],
-  },
-  {
-    id: 'inst-04',
-    name: 'Marcela Patricia Vargas',
-    documentId: '1.032.391.477',
-    specialties: ['A2', 'B1', 'C1'],
-  },
-];
-
-const DEFAULT_VEHICLES = [
-  { plate: 'KLM-482', model: 'Renault Logan Dual 2024', category: 'B1', lastOdometer: 42310 },
-  { plate: 'FTR-915', model: 'Chevrolet Onix Sedan 2025', category: 'B1', lastOdometer: 18940 },
-  { plate: 'SPB-207', model: 'Kia Soluto Servicio Público', category: 'C1', lastOdometer: 64120 },
-  { plate: 'MOT-64F', model: 'Yamaha FZ 250 ABS', category: 'A2', lastOdometer: 14780 },
-  { plate: 'MOT-89G', model: 'Suzuki Gixxer 150 FI', category: 'A2', lastOdometer: 22415 },
-  { plate: 'TRK-714', model: 'Hino FC9J Camión Escuela', category: 'C2', lastOdometer: 118520 },
-  { plate: 'ART-309', model: 'Kenworth T800 Tractocamión', category: 'C3', lastOdometer: 204610 },
-];
+// La app arranca de cero: no se precargan instructores ni vehículos.
+const DEFAULT_INSTRUCTORS = [];
+const DEFAULT_VEHICLES = [];
 
 export const SUGGESTED_TOPICS = {
   Práctica: [
@@ -488,7 +455,7 @@ async function fetchTable(table) {
 }
 
 async function writeSeedToCloud(seed) {
-  // Vacía las tres tablas y vuelve a insertar el dataset de demostración.
+  // Vacía las tres tablas antes de insertar el dataset indicado (vacío al limpiar).
   for (const table of Object.values(CLOUD_COLLECTIONS)) {
     const { error } = await supabase.from(table).delete().neq('id', '');
     if (error) throw error;
@@ -637,7 +604,7 @@ async function prepareCloud() {
 
     if (cloudIsEmpty && !alreadySeeded) {
       await writeSeedToCloud({
-        records: readStorage(STORAGE_KEYS.RECORDS, createSeedRecords),
+        records: readStorage(STORAGE_KEYS.RECORDS, () => []),
         instructors: readStorage(STORAGE_KEYS.INSTRUCTORS, () => DEFAULT_INSTRUCTORS),
         vehicles: readStorage(STORAGE_KEYS.VEHICLES, () => DEFAULT_VEHICLES),
       });
@@ -739,7 +706,7 @@ export const dataService = {
    * @returns {import('../types/cea').ClassRecord[]}
    */
   getRecords() {
-    const records = readStorage(STORAGE_KEYS.RECORDS, createSeedRecords);
+    const records = readStorage(STORAGE_KEYS.RECORDS, () => []);
     return [...records].sort((a, b) => {
       const dateCmp = `${b.date}T${b.startTime}`.localeCompare(`${a.date}T${a.startTime}`);
       if (dateCmp !== 0) return dateCmp;
@@ -889,22 +856,18 @@ export const dataService = {
   },
 
   /**
-   * Restaura datos de demostración iniciales (también en la nube).
+   * Vacía por completo los datos locales y de la nube para empezar de cero.
    * @returns {import('../types/cea').ClassRecord[]}
    */
-  resetDemoData() {
-    const seed = {
-      records: /** @type {import('../types/cea').ClassRecord[]} */ (createSeedRecords()),
-      instructors: DEFAULT_INSTRUCTORS,
-      vehicles: DEFAULT_VEHICLES,
-    };
-    localStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify(seed.records));
-    localStorage.setItem(STORAGE_KEYS.INSTRUCTORS, JSON.stringify(seed.instructors));
-    localStorage.setItem(STORAGE_KEYS.VEHICLES, JSON.stringify(seed.vehicles));
+  clearAllData() {
+    const empty = { records: [], instructors: [], vehicles: [] };
+    localStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.INSTRUCTORS, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.VEHICLES, JSON.stringify([]));
     localStorage.setItem(CLOUD_SEEDED_KEY, '1');
-    enqueue({ collection: 'all', type: 'reset_demo', docId: 'demo', payload: seed });
+    enqueue({ collection: 'all', type: 'reset_demo', docId: 'empty', payload: empty });
     notifyDataChanged();
-    return seed.records;
+    return [];
   },
 };
 

@@ -36,7 +36,7 @@ import { CATEGORY_COLOR_THEMES } from '../utils/colorPalette';
 interface OfficeDashboardProps {
   records: ClassRecord[];
   onDeleteRecord: (id: string) => void;
-  onResetDemo: () => void;
+  onClearAll: () => void;
   onNavigateToForm: () => void;
 }
 
@@ -138,7 +138,7 @@ function summarizeHoursByInstructor(
 export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
   records,
   onDeleteRecord,
-  onResetDemo,
+  onClearAll,
   onNavigateToForm,
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -418,14 +418,18 @@ export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
           <button
             type="button"
             onClick={() => {
-              onResetDemo();
+              const confirmed = window.confirm(
+                '¿Vaciar todos los registros, instructores y vehículos (local y nube)?'
+              );
+              if (!confirmed) return;
+              onClearAll();
               setVehicles(dataService.getVehicles());
               setInstructors(dataService.getInstructors());
             }}
             className="inline-flex items-center gap-1.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3.5 py-2.5 text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors min-h-[44px] whitespace-nowrap shrink-0"
           >
             <RotateCcw className="w-3.5 h-3.5" />
-            <span>Restaurar datos demo</span>
+            <span>Vaciar datos</span>
           </button>
 
           <button

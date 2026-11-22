@@ -78,22 +78,15 @@ export const InstructorForm: React.FC<InstructorFormProps> = ({
   const recentStudents = useMemo(() => dataService.getRecentStudents(), [dataVersion]);
 
   // Form fields
-  const [date, setDate] = useState<string>(getTodayDateString);
-  const [startTime, setStartTime] = useState<string>('08:00');
-  const [endTime, setEndTime] = useState<string>('10:00');
-  const [instructorId, setInstructorId] = useState<string>(
-    () => instructors[0]?.id || ''
-  );
-  const [instructorDocument, setInstructorDocument] = useState<string>(
-    () => instructors[0]?.documentId || ''
-  );
+  const [date, setDate] = useState<string>('');
+  const [startTime, setStartTime] = useState<string>('');
+  const [endTime, setEndTime] = useState<string>('');
+  const [instructorId, setInstructorId] = useState<string>('');
+  const [instructorDocument, setInstructorDocument] = useState<string>('');
   const [licenseCategory, setLicenseCategory] = useState<LicenseCategory>('B1');
 
   // Vehicle selection (select-only from academy fleet)
-  const [vehiclePlate, setVehiclePlate] = useState<string>(() => {
-    const firstB1 = vehicles.find((v) => v.category === 'B1');
-    return firstB1?.plate || vehicles[0]?.plate || '';
-  });
+  const [vehiclePlate, setVehiclePlate] = useState<string>('');
 
   // Student fields
   const [studentName, setStudentName] = useState<string>('');
@@ -240,15 +233,20 @@ export const InstructorForm: React.FC<InstructorFormProps> = ({
 
   const handleResetForNextClass = () => {
     setSubmitSuccess(null);
-    const firstMatch =
-      vehicles.find((v) => v.category === licenseCategory) || vehicles[0];
-    setVehiclePlate(firstMatch?.plate || '');
+    setDate('');
+    setStartTime('');
+    setEndTime('');
+    setInstructorId('');
+    setInstructorDocument('');
+    setLicenseCategory('B1');
+    setVehiclePlate('');
     setStudentName('');
     setStudentDocument('');
     setAttendanceStatus('Asistió');
     setStudentSignature(undefined);
     setInstructorSignature(undefined);
     setErrors({});
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const selectedCategoryInfo = LICENSE_CATEGORIES.find(

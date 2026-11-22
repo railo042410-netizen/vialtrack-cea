@@ -84,10 +84,10 @@ export default function App() {
     showToast(`Registro ${id} eliminado`);
   };
 
-  const handleResetDemo = () => {
-    const seeded = dataService.resetDemoData();
-    setRecords(seeded);
-    showToast('Datos de demostración restaurados');
+  const handleClearAll = () => {
+    const empty = dataService.clearAllData();
+    setRecords(empty);
+    showToast('Datos vaciados · todo listo para empezar de cero');
   };
 
   const activePaletteMeta =
@@ -262,7 +262,7 @@ export default function App() {
           <OfficeDashboard
             records={records}
             onDeleteRecord={handleDeleteRecord}
-            onResetDemo={handleResetDemo}
+            onClearAll={handleClearAll}
             onNavigateToForm={() => {
               setActiveView('instructor');
               window.scrollTo({ top: 0, behavior: 'smooth' });
