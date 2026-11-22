@@ -276,10 +276,10 @@ export const InstructorForm: React.FC<InstructorFormProps> = ({
                 {submitSuccess.id} · Sincronizado
               </p>
               <h2 className="mt-1 text-xl font-bold text-slate-900 dark:text-white">
-                Registro guardado correctamente
+                Registro exitoso
               </h2>
               <p className="mt-1 text-sm text-slate-600 dark:text-slate-400">
-                La clase ya está disponible en el panel administrativo de la oficina.
+                La clase quedó guardada y sincronizada correctamente.
               </p>
             </div>
           </div>
@@ -312,7 +312,7 @@ export const InstructorForm: React.FC<InstructorFormProps> = ({
             </div>
           </dl>
 
-          <div className="mt-6 flex flex-col sm:flex-row gap-3">
+          <div className="mt-6 flex flex-col sm:flex-row items-center gap-3">
             <button
               type="button"
               onClick={handleResetForNextClass}
@@ -321,13 +321,16 @@ export const InstructorForm: React.FC<InstructorFormProps> = ({
               <RotateCcw className="w-4 h-4" />
               <span>Registrar otra clase</span>
             </button>
-            <button
-              type="button"
-              onClick={onNavigateToOffice}
-              className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-5 py-3 text-sm font-medium text-slate-900 dark:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors min-h-[48px]"
-            >
-              <span>Ver en Panel de Oficina</span>
-            </button>
+            <div className="flex flex-1 items-center justify-center gap-3 rounded-xl border border-emerald-200 dark:border-emerald-800/50 bg-emerald-50/70 dark:bg-emerald-950/20 px-5 py-2.5 min-h-[48px]">
+              <img
+                src="/aprobado.svg"
+                alt="Registro aprobado"
+                className="h-11 w-11 shrink-0"
+              />
+              <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">
+                Registro exitoso
+              </span>
+            </div>
           </div>
         </div>
       </div>
