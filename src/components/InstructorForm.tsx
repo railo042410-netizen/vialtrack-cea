@@ -36,6 +36,14 @@ function getTodayDateString(): string {
   return `${y}-${m}-${d}`;
 }
 
+/** Hora local actual del dispositivo en formato HH:mm. */
+function getCurrentTimeString(): string {
+  const now = new Date();
+  return `${String(now.getHours()).padStart(2, '0')}:${String(
+    now.getMinutes()
+  ).padStart(2, '0')}`;
+}
+
 function addMinutesToTime(timeStr: string, minutesToAdd: number): string {
   const [hStr, mStr] = timeStr.split(':');
   const h = Number(hStr);
@@ -78,8 +86,8 @@ export const InstructorForm: React.FC<InstructorFormProps> = ({
   const recentStudents = useMemo(() => dataService.getRecentStudents(), [dataVersion]);
 
   // Form fields
-  const [date, setDate] = useState<string>('');
-  const [startTime, setStartTime] = useState<string>('');
+  const [date, setDate] = useState<string>(getTodayDateString);
+  const [startTime, setStartTime] = useState<string>(getCurrentTimeString);
   const [endTime, setEndTime] = useState<string>('');
   const [instructorId, setInstructorId] = useState<string>('');
   const [instructorDocument, setInstructorDocument] = useState<string>('');
@@ -233,8 +241,8 @@ export const InstructorForm: React.FC<InstructorFormProps> = ({
 
   const handleResetForNextClass = () => {
     setSubmitSuccess(null);
-    setDate('');
-    setStartTime('');
+    setDate(getTodayDateString());
+    setStartTime(getCurrentTimeString());
     setEndTime('');
     setInstructorId('');
     setInstructorDocument('');
