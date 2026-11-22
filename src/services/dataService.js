@@ -460,8 +460,13 @@ function cloudPayload(collectionKey, item) {
 
 /** Lee una tabla completa y reconstruye los objetos de dominio. */
 async function fetchTable(table) {
-  const { data, error } = await supabase.from(table).select('id, data');
+  // cea_subcuentas usa columnas planas; el resto guarda el objeto en `data`.
+  const flat = table === CLOUD_COLLECTIONS.subaccounts;
+  const { data, error } = await supabase
+    .from(table)
+    .select(flat ? '*' : 'id, data');
   if (error) throw error;
+  if (flat) return data || [];
   return (data || []).map((row) => ({ id: row.id, ...row.data }));
 }
 

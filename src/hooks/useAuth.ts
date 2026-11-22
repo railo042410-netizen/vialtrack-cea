@@ -89,7 +89,7 @@ export function useAuth() {
     session,
     user: session?.user ?? null,
     profile,
-    isAdmin: profile?.role === 'admin',
+    isAdmin: profile?.role === 'admin' || profile?.role === 'master',
     isMaster: profile?.role === 'master',
     loading,
     signIn,
