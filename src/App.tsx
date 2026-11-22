@@ -1,5 +1,12 @@
 import { useEffect, useState } from 'react';
-import { ClipboardEdit, LayoutDashboard, Moon, Palette, Sun } from 'lucide-react';
+import {
+  ClipboardEdit,
+  LayoutDashboard,
+  LogOut,
+  Moon,
+  Palette,
+  Sun,
+} from 'lucide-react';
 import { ClassRecord } from './types/cea';
 import { dataService } from './services/dataService';
 import { InstructorForm } from './components/InstructorForm';
@@ -7,7 +14,10 @@ import { OfficeDashboard } from './components/OfficeDashboard';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { CloudSyncBadge } from './components/CloudSyncBadge';
 import { LicenseGate } from './components/LicenseGate';
+import { AuthScreen } from './components/AuthScreen';
+import { useAuth } from './hooks/useAuth';
 import { useCloudSync } from './hooks/useCloudSync';
+import { isCloudConfigured } from './services/supabase';
 import { COLOR_PALETTES, ColorPaletteId } from './utils/colorPalette';
 
 type ActiveView = 'instructor' | 'office';
@@ -41,6 +51,8 @@ export default function App() {
     dataService.isDeviceLicensed()
   );
   const cloudSync = useCloudSync();
+  const auth = useAuth();
+  const canOffice = !isCloudConfigured || auth.isAdmin;
 
   // Los cambios en la nube (u otras pestañas) actualizan la vista en tiempo real.
   useEffect(() => {
@@ -61,6 +73,10 @@ export default function App() {
       // ignore
     }
   }, [isDark]);
+
+  useEffect(() => {
+    if (!canOffice && activeView === 'office') setActiveView('instructor');
+  }, [canOffice, activeView]);
 
   useEffect(() => {
     document.documentElement.dataset.palette = palette;
@@ -97,6 +113,20 @@ export default function App() {
 
   const activePaletteMeta =
     COLOR_PALETTES.find((p) => p.id === palette) || COLOR_PALETTES[0];
+
+  if (isCloudConfigured && auth.loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 dark:bg-[#070B14]">
+        <p className="text-sm text-slate-500 dark:text-slate-400">
+          Verificando sesión…
+        </p>
+      </div>
+    );
+  }
+
+  if (isCloudConfigured && !auth.session) {
+    return <AuthScreen />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 dark:bg-[#070B14] dark:text-slate-100 bg-ambient-mesh transition-colors duration-300">
@@ -145,29 +175,31 @@ export default function App() {
               )}
             </button>
 
-            <button
-              type="button"
-              onClick={() => setActiveView('office')}
-              style={
-                activeView === 'office'
-                  ? { color: 'var(--accent-text)' }
-                  : undefined
-              }
-              className={`relative h-full inline-flex items-center gap-2 text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${
-                activeView === 'office'
-                  ? ''
-                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
-              }`}
-            >
-              <LayoutDashboard className="w-4 h-4" />
-              <span>Panel de Oficina ({records.length})</span>
-              {activeView === 'office' && (
-                <span
-                  className="absolute inset-x-0 bottom-0 h-0.5 rounded-t-full"
-                  style={{ backgroundImage: 'var(--accent-gradient)' }}
-                />
-              )}
-            </button>
+            {canOffice && (
+              <button
+                type="button"
+                onClick={() => setActiveView('office')}
+                style={
+                  activeView === 'office'
+                    ? { color: 'var(--accent-text)' }
+                    : undefined
+                }
+                className={`relative h-full inline-flex items-center gap-2 text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${
+                  activeView === 'office'
+                    ? ''
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                }`}
+              >
+                <LayoutDashboard className="w-4 h-4" />
+                <span>Panel de Oficina ({records.length})</span>
+                {activeView === 'office' && (
+                  <span
+                    className="absolute inset-x-0 bottom-0 h-0.5 rounded-t-full"
+                    style={{ backgroundImage: 'var(--accent-gradient)' }}
+                  />
+                )}
+              </button>
+            )}
           </nav>
 
           {/* Zone 3: Primary utility actions */}
@@ -192,6 +224,17 @@ export default function App() {
                 <Moon className="w-4 h-4 text-indigo-600" />
               )}
             </button>
+            {isCloudConfigured && auth.user && (
+              <button
+                type="button"
+                onClick={() => void auth.signOut()}
+                title={auth.profile?.email || 'Cerrar sesión'}
+                aria-label="Cerrar sesión"
+                className="inline-flex items-center justify-center min-h-[40px] min-w-[40px] rounded-xl border border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/90 text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+              </button>
+            )}
           </div>
         </div>
       </header>
@@ -313,32 +356,36 @@ export default function App() {
             <span>Registro Instructor</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => {
-              setActiveView('office');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-            style={
-              activeView === 'office'
-                ? { color: 'var(--accent-text)' }
-                : undefined
-            }
-            className={`relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors ${
-              activeView === 'office'
-                ? ''
-                : 'text-slate-500 dark:text-slate-400'
-            }`}
-          >
-            {activeView === 'office' && (
-              <span
-                className="absolute top-0 inset-x-6 h-0.5 rounded-b-full"
-                style={{ backgroundImage: 'var(--accent-gradient)' }}
-              />
-            )}
-            <LayoutDashboard className="w-5 h-5" />
-            <span>Panel Oficina ({records.length})</span>
-          </button>
+          {canOffice ? (
+            <button
+              type="button"
+              onClick={() => {
+                setActiveView('office');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              style={
+                activeView === 'office'
+                  ? { color: 'var(--accent-text)' }
+                  : undefined
+              }
+              className={`relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors ${
+                activeView === 'office'
+                  ? ''
+                  : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              {activeView === 'office' && (
+                <span
+                  className="absolute top-0 inset-x-6 h-0.5 rounded-b-full"
+                  style={{ backgroundImage: 'var(--accent-gradient)' }}
+                />
+              )}
+              <LayoutDashboard className="w-5 h-5" />
+              <span>Panel Oficina ({records.length})</span>
+            </button>
+          ) : (
+            <div />
+          )}
         </div>
       </nav>
 
