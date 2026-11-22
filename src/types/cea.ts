@@ -18,6 +18,16 @@ export interface FleetVehicle {
   lastOdometer?: number;
 }
 
+export interface Subaccount {
+  id: string;
+  license_id: string | null;
+  email: string;
+  full_name: string | null;
+  role: 'master' | 'admin' | 'instructor';
+  created_at: string;
+  created_by?: string | null;
+}
+
 export interface License {
   id: string;
   code: string;

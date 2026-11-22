@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import {
   ClipboardEdit,
+  Crown,
   LayoutDashboard,
   LogOut,
   Moon,
@@ -14,13 +15,14 @@ import { OfficeDashboard } from './components/OfficeDashboard';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { CloudSyncBadge } from './components/CloudSyncBadge';
 import { LicenseGate } from './components/LicenseGate';
+import { MasterPanel } from './components/MasterPanel';
 import { AuthScreen } from './components/AuthScreen';
 import { useAuth } from './hooks/useAuth';
 import { useCloudSync } from './hooks/useCloudSync';
 import { isCloudConfigured } from './services/supabase';
 import { COLOR_PALETTES, ColorPaletteId } from './utils/colorPalette';
 
-type ActiveView = 'instructor' | 'office';
+type ActiveView = 'instructor' | 'office' | 'master';
 
 export default function App() {
   const [activeView, setActiveView] = useState<ActiveView>('instructor');
@@ -53,6 +55,7 @@ export default function App() {
   const cloudSync = useCloudSync();
   const auth = useAuth();
   const canOffice = !isCloudConfigured || auth.isAdmin;
+  const canMaster = isCloudConfigured && auth.isMaster;
 
   // Los cambios en la nube (u otras pestañas) actualizan la vista en tiempo real.
   useEffect(() => {
@@ -76,7 +79,8 @@ export default function App() {
 
   useEffect(() => {
     if (!canOffice && activeView === 'office') setActiveView('instructor');
-  }, [canOffice, activeView]);
+    if (!canMaster && activeView === 'master') setActiveView('instructor');
+  }, [canOffice, canMaster, activeView]);
 
   useEffect(() => {
     document.documentElement.dataset.palette = palette;
@@ -200,6 +204,32 @@ export default function App() {
                 )}
               </button>
             )}
+
+            {canMaster && (
+              <button
+                type="button"
+                onClick={() => setActiveView('master')}
+                style={
+                  activeView === 'master'
+                    ? { color: 'var(--accent-text)' }
+                    : undefined
+                }
+                className={`relative h-full inline-flex items-center gap-2 text-sm font-medium transition-colors whitespace-nowrap shrink-0 ${
+                  activeView === 'master'
+                    ? ''
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                }`}
+              >
+                <Crown className="w-4 h-4" />
+                <span>Plataforma Maestra</span>
+                {activeView === 'master' && (
+                  <span
+                    className="absolute inset-x-0 bottom-0 h-0.5 rounded-t-full"
+                    style={{ backgroundImage: 'var(--accent-gradient)' }}
+                  />
+                )}
+              </button>
+            )}
           </nav>
 
           {/* Zone 3: Primary utility actions */}
@@ -297,7 +327,9 @@ export default function App() {
           </div>
         </div>
 
-        {activeView === 'instructor' ? (
+        {activeView === 'master' && canMaster ? (
+          <MasterPanel />
+        ) : activeView === 'instructor' ? (
           isLicensed ? (
             <InstructorForm
               onRecordSaved={handleRecordSaved}
@@ -328,7 +360,7 @@ export default function App() {
         aria-label="Navegación móvil"
         className="no-print md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#070B14]/95 backdrop-blur-md pb-safe"
       >
-        <div className="grid grid-cols-2 h-14">
+        <div className="grid grid-cols-3 h-14">
           <button
             type="button"
             onClick={() => {
@@ -382,6 +414,37 @@ export default function App() {
               )}
               <LayoutDashboard className="w-5 h-5" />
               <span>Panel Oficina ({records.length})</span>
+            </button>
+          ) : (
+            <div />
+          )}
+
+          {canMaster ? (
+            <button
+              type="button"
+              onClick={() => {
+                setActiveView('master');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              style={
+                activeView === 'master'
+                  ? { color: 'var(--accent-text)' }
+                  : undefined
+              }
+              className={`relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors ${
+                activeView === 'master'
+                  ? ''
+                  : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              {activeView === 'master' && (
+                <span
+                  className="absolute top-0 inset-x-6 h-0.5 rounded-b-full"
+                  style={{ backgroundImage: 'var(--accent-gradient)' }}
+                />
+              )}
+              <Crown className="w-5 h-5" />
+              <span>Maestra</span>
             </button>
           ) : (
             <div />

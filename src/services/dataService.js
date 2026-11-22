@@ -16,6 +16,7 @@ const STORAGE_KEYS = {
   INSTRUCTORS: 'vialtrack_cea_instructors_v1',
   VEHICLES: 'vialtrack_cea_vehicles_v1',
   LICENSES: 'vialtrack_cea_licenses_v1',
+  SUBACCOUNTS: 'vialtrack_cea_subaccounts_v1',
 };
 
 const OUTBOX_KEY = 'vialtrack_cea_outbox_v1';
@@ -31,6 +32,7 @@ const CLOUD_COLLECTIONS = {
   instructors: 'cea_instructores',
   vehicles: 'cea_vehiculos',
   licenses: 'cea_licencias',
+  subaccounts: 'cea_subcuentas',
 };
 
 const STORAGE_FOR_COLLECTION = {
@@ -38,6 +40,7 @@ const STORAGE_FOR_COLLECTION = {
   instructors: STORAGE_KEYS.INSTRUCTORS,
   vehicles: STORAGE_KEYS.VEHICLES,
   licenses: STORAGE_KEYS.LICENSES,
+  subaccounts: STORAGE_KEYS.SUBACCOUNTS,
 };
 
 /**
@@ -474,6 +477,7 @@ async function writeSeedToCloud(seed) {
     instructors: seed.instructors || [],
     vehicles: seed.vehicles || [],
     licenses: seed.licenses || [],
+    subaccounts: seed.subaccounts || [],
   };
 
   for (const [key, items] of Object.entries(groups)) {
@@ -599,18 +603,21 @@ async function prepareCloud() {
   if (!supabase || cloudReady) return;
 
   try {
-    const [records, instructors, vehicles, licenses] = await Promise.all([
-      fetchTable(CLOUD_COLLECTIONS.records),
-      fetchTable(CLOUD_COLLECTIONS.instructors),
-      fetchTable(CLOUD_COLLECTIONS.vehicles),
-      fetchTable(CLOUD_COLLECTIONS.licenses),
-    ]);
+    const [records, instructors, vehicles, licenses, subaccounts] =
+      await Promise.all([
+        fetchTable(CLOUD_COLLECTIONS.records),
+        fetchTable(CLOUD_COLLECTIONS.instructors),
+        fetchTable(CLOUD_COLLECTIONS.vehicles),
+        fetchTable(CLOUD_COLLECTIONS.licenses),
+        fetchTable(CLOUD_COLLECTIONS.subaccounts),
+      ]);
 
     const cloudIsEmpty =
       records.length === 0 &&
       instructors.length === 0 &&
       vehicles.length === 0 &&
-      licenses.length === 0;
+      licenses.length === 0 &&
+      subaccounts.length === 0;
     const alreadySeeded = localStorage.getItem(CLOUD_SEEDED_KEY) === '1';
 
     if (cloudIsEmpty && !alreadySeeded) {
@@ -619,6 +626,7 @@ async function prepareCloud() {
         instructors: readStorage(STORAGE_KEYS.INSTRUCTORS, () => DEFAULT_INSTRUCTORS),
         vehicles: readStorage(STORAGE_KEYS.VEHICLES, () => DEFAULT_VEHICLES),
         licenses: readStorage(STORAGE_KEYS.LICENSES, () => []),
+        subaccounts: readStorage(STORAGE_KEYS.SUBACCOUNTS, () => []),
       });
       localStorage.setItem(CLOUD_SEEDED_KEY, '1');
     }
@@ -689,6 +697,11 @@ export async function initCloudSync() {
       'postgres_changes',
       { event: '*', schema: 'public', table: CLOUD_COLLECTIONS.licenses },
       () => void refreshFromCloud('licenses')
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: CLOUD_COLLECTIONS.subaccounts },
+      () => void refreshFromCloud('subaccounts')
     )
     .subscribe();
 
@@ -880,6 +893,11 @@ export const dataService = {
     return readStorage(STORAGE_KEYS.LICENSES, () => []);
   },
 
+  /** Subcuentas creadas desde la plataforma maestra. */
+  getSubaccounts() {
+    return readStorage(STORAGE_KEYS.SUBACCOUNTS, () => []);
+  },
+
   /** Genera un código legible y único para una licencia. */
   generateLicenseCode() {
     const block = () =>
@@ -1018,11 +1036,18 @@ export const dataService = {
    * @returns {import('../types/cea').ClassRecord[]}
    */
   clearAllData() {
-    const empty = { records: [], instructors: [], vehicles: [], licenses: [] };
+    const empty = {
+      records: [],
+      instructors: [],
+      vehicles: [],
+      licenses: [],
+      subaccounts: [],
+    };
     localStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.INSTRUCTORS, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.VEHICLES, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.LICENSES, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.SUBACCOUNTS, JSON.stringify([]));
     localStorage.removeItem(ACTIVATED_LICENSE_KEY);
     localStorage.setItem(CLOUD_SEEDED_KEY, '1');
     enqueue({ collection: 'all', type: 'reset_demo', docId: 'empty', payload: empty });

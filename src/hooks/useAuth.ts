@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from '../services/supabase';
 
-export type UserRole = 'admin' | 'instructor';
+export type UserRole = 'master' | 'admin' | 'instructor';
 
 export interface UserProfile {
   id: string;
@@ -90,6 +90,7 @@ export function useAuth() {
     user: session?.user ?? null,
     profile,
     isAdmin: profile?.role === 'admin',
+    isMaster: profile?.role === 'master',
     loading,
     signIn,
     signUp,
