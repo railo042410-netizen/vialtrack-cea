@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="112" fill="#0B1120"/>
+  <rect x="18" y="18" width="476" height="476" rx="98" stroke="#1E293B" stroke-width="4"/>
+
+  <!-- Acta / reporte -->
+  <rect x="132" y="104" width="248" height="304" rx="26" stroke="#F8FAFC" stroke-width="14"/>
+  <path d="M180 200H332M180 248H332M180 296H286" stroke="#64748B" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Visto bueno -->
+  <path d="M272 160L292 180L334 136" stroke="#22D3EE" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Firma -->
+  <path d="M172 366C214 338 246 382 332 346" stroke="#22D3EE" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="332" cy="346" r="7" fill="#22D3EE"/>
+</svg>

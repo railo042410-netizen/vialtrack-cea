@@ -15,8 +15,8 @@ export default defineConfig(() => {
         includeAssets: ['icon.svg', 'apple-touch-icon.png', 'pwa-192x192.png', 'pwa-512x512.png', 'pwa-maskable-512x512.png'],
         manifest: {
           id: '/',
-          name: 'VialTrack CEA · Control de Instructores',
-          short_name: 'VialTrack',
+          name: 'REPORTEVIALCEA · Control de Instructores',
+          short_name: 'REPORTEVIALCEA',
           description: 'Control digital de asistencia, horas dictadas, kilometraje y firmas para Centros de Enseñanza Automovilística.',
           theme_color: '#0B1120',
           background_color: '#090D16',

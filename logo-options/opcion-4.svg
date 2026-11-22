@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="112" fill="#0B1120"/>
+  <rect x="18" y="18" width="476" height="476" rx="98" stroke="#1E293B" stroke-width="4"/>
+
+  <!-- Monograma R -->
+  <path d="M164 152V360" stroke="#2563EB" stroke-width="38" stroke-linecap="round"/>
+  <path d="M164 152C292 142 314 254 164 258" stroke="#3B82F6" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M232 258L352 360" stroke="#2563EB" stroke-width="38" stroke-linecap="round"/>
+  <path d="M164 196V222" stroke="#F8FAFC" stroke-width="7" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- Firma -->
+  <path d="M118 330C192 282 272 358 396 288" stroke="#22D3EE" stroke-width="11" stroke-linecap="round"/>
+  <circle cx="396" cy="288" r="8" fill="#22D3EE"/>
+</svg>

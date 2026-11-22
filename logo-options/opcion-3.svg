@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="112" fill="#0B1120"/>
+  <rect x="18" y="18" width="476" height="476" rx="98" stroke="#1E293B" stroke-width="4"/>
+
+  <!-- Ruta sinuosa -->
+  <path d="M104 368C176 368 168 168 256 168C344 168 336 336 404 228" stroke="#2563EB" stroke-width="42" stroke-linecap="round"/>
+  <path d="M104 368C176 368 168 168 256 168C344 168 336 336 404 228" stroke="#F8FAFC" stroke-width="6" stroke-linecap="round" stroke-dasharray="24 22" opacity="0.9"/>
+  <circle cx="404" cy="228" r="18" fill="#22D3EE" opacity="0.18"/>
+  <circle cx="404" cy="228" r="9" fill="#22D3EE"/>
+
+  <!-- Firma base -->
+  <path d="M132 414C198 384 266 438 374 398" stroke="#22D3EE" stroke-width="9" stroke-linecap="round" opacity="0.85"/>
+</svg>

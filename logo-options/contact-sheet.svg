@@ -1,0 +1,63 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="640" viewBox="0 0 900 640">
+<rect width="900" height="640" fill="#070B14"/>
+<svg xmlns="http://www.w3.org/2000/svg" x="40" y="16" width="220" height="220" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0B1120"/>
+  <rect x="18" y="18" width="476" height="476" rx="98" stroke="#1E293B" stroke-width="4"/>
+  <path d="M152 152L256 352L360 152" stroke="#2563EB" stroke-width="42" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M152 152L256 352L360 152" stroke="#F8FAFC" stroke-width="6" stroke-linecap="round" stroke-dasharray="24 22" opacity="0.9"/>
+  <path d="M108 292C168 244 202 338 258 286C312 236 342 318 398 266" stroke="#22D3EE" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="398" cy="266" r="16" fill="#22D3EE" opacity="0.18"/>
+  <circle cx="398" cy="266" r="8" fill="#22D3EE"/></svg>
+<text x="150" y="272" fill="#F8FAFC" font-family="sans-serif" font-size="20" font-weight="600" text-anchor="middle">1 · Vía + firma</text>
+<svg xmlns="http://www.w3.org/2000/svg" x="340" y="16" width="220" height="220" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0B1120"/>
+  <rect x="18" y="18" width="476" height="476" rx="98" stroke="#1E293B" stroke-width="4"/>
+
+  <!-- Volante -->
+  <circle cx="256" cy="256" r="140" stroke="#2563EB" stroke-width="30"/>
+  <path d="M256 116V206M136 326L214 280M376 326L298 280" stroke="#3B82F6" stroke-width="26" stroke-linecap="round"/>
+  <circle cx="256" cy="256" r="54" fill="#0B1120" stroke="#F8FAFC" stroke-width="6"/>
+  <path d="M234 256L249 271L280 239" stroke="#22D3EE" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Firma sutil -->
+  <path d="M120 392C180 366 220 410 278 384C330 360 360 398 400 378" stroke="#22D3EE" stroke-width="8" stroke-linecap="round" opacity="0.75"/>
+  <circle cx="400" cy="378" r="7" fill="#22D3EE" opacity="0.85"/></svg>
+<text x="450" y="272" fill="#F8FAFC" font-family="sans-serif" font-size="20" font-weight="600" text-anchor="middle">2 · Volante + check</text>
+<svg xmlns="http://www.w3.org/2000/svg" x="640" y="16" width="220" height="220" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0B1120"/>
+  <rect x="18" y="18" width="476" height="476" rx="98" stroke="#1E293B" stroke-width="4"/>
+
+  <!-- Ruta sinuosa -->
+  <path d="M104 368C176 368 168 168 256 168C344 168 336 336 404 228" stroke="#2563EB" stroke-width="42" stroke-linecap="round"/>
+  <path d="M104 368C176 368 168 168 256 168C344 168 336 336 404 228" stroke="#F8FAFC" stroke-width="6" stroke-linecap="round" stroke-dasharray="24 22" opacity="0.9"/>
+  <circle cx="404" cy="228" r="18" fill="#22D3EE" opacity="0.18"/>
+  <circle cx="404" cy="228" r="9" fill="#22D3EE"/>
+
+  <!-- Firma base -->
+  <path d="M132 414C198 384 266 438 374 398" stroke="#22D3EE" stroke-width="9" stroke-linecap="round" opacity="0.85"/></svg>
+<text x="750" y="272" fill="#F8FAFC" font-family="sans-serif" font-size="20" font-weight="600" text-anchor="middle">3 · Ruta + nodo</text>
+<svg xmlns="http://www.w3.org/2000/svg" x="40" y="336" width="220" height="220" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0B1120"/>
+  <rect x="18" y="18" width="476" height="476" rx="98" stroke="#1E293B" stroke-width="4"/>
+
+  <!-- Monograma R -->
+  <path d="M164 152V360" stroke="#2563EB" stroke-width="38" stroke-linecap="round"/>
+  <path d="M164 152C292 142 314 254 164 258" stroke="#3B82F6" stroke-width="38" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M232 258L352 360" stroke="#2563EB" stroke-width="38" stroke-linecap="round"/>
+  <path d="M164 196V222" stroke="#F8FAFC" stroke-width="7" stroke-linecap="round" opacity="0.9"/>
+
+  <!-- Firma -->
+  <path d="M118 330C192 282 272 358 396 288" stroke="#22D3EE" stroke-width="11" stroke-linecap="round"/>
+  <circle cx="396" cy="288" r="8" fill="#22D3EE"/></svg>
+<text x="150" y="592" fill="#F8FAFC" font-family="sans-serif" font-size="20" font-weight="600" text-anchor="middle">4 · Monograma RV</text>
+<svg xmlns="http://www.w3.org/2000/svg" x="340" y="336" width="220" height="220" viewBox="0 0 512 512"><rect width="512" height="512" rx="112" fill="#0B1120"/>
+  <rect x="18" y="18" width="476" height="476" rx="98" stroke="#1E293B" stroke-width="4"/>
+
+  <!-- Acta / reporte -->
+  <rect x="132" y="104" width="248" height="304" rx="26" stroke="#F8FAFC" stroke-width="14"/>
+  <path d="M180 200H332M180 248H332M180 296H286" stroke="#64748B" stroke-width="12" stroke-linecap="round"/>
+
+  <!-- Visto bueno -->
+  <path d="M272 160L292 180L334 136" stroke="#22D3EE" stroke-width="15" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Firma -->
+  <path d="M172 366C214 338 246 382 332 346" stroke="#22D3EE" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="332" cy="346" r="7" fill="#22D3EE"/></svg>
+<text x="450" y="592" fill="#F8FAFC" font-family="sans-serif" font-size="20" font-weight="600" text-anchor="middle">5 · Acta digital</text>
+</svg>

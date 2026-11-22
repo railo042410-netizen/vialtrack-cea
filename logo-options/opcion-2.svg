@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="112" fill="#0B1120"/>
+  <rect x="18" y="18" width="476" height="476" rx="98" stroke="#1E293B" stroke-width="4"/>
+
+  <!-- Volante -->
+  <circle cx="256" cy="256" r="140" stroke="#2563EB" stroke-width="30"/>
+  <path d="M256 116V206M136 326L214 280M376 326L298 280" stroke="#3B82F6" stroke-width="26" stroke-linecap="round"/>
+  <circle cx="256" cy="256" r="54" fill="#0B1120" stroke="#F8FAFC" stroke-width="6"/>
+  <path d="M234 256L249 271L280 239" stroke="#22D3EE" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <!-- Firma sutil -->
+  <path d="M120 392C180 366 220 410 278 384C330 360 360 398 400 378" stroke="#22D3EE" stroke-width="8" stroke-linecap="round" opacity="0.75"/>
+  <circle cx="400" cy="378" r="7" fill="#22D3EE" opacity="0.85"/>
+</svg>

@@ -1,5 +1,5 @@
 {
-  "name": "VialTrack CEA",
+  "name": "REPORTEVIALCEA",
   "description": "Plataforma PWA mobile-first para control digital de asistencia, horas dictadas, kilometraje y firmas de instructores en Centros de Enseñanza Automovilística (CEA).",
   "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]

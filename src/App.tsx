@@ -108,7 +108,7 @@ export default function App() {
             className="font-display text-base sm:text-lg font-bold tracking-tight whitespace-nowrap shrink-0 bg-clip-text text-transparent"
             style={{ backgroundImage: 'var(--accent-gradient)' }}
           >
-            VialTrack CEA
+            REPORTEVIALCEA
           </a>
 
           {/* Zone 2: Clean typographic navigation (Desktop) */}
