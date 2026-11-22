@@ -1,20 +1,35 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# VialTrack CEA
 
-# Run and deploy your AI Studio app
+PWA mobile-first para el control digital de asistencia, horas dictadas, kilometraje y firmas de instructores en Centros de Enseñanza Automovilística (CEA).
 
-This contains everything you need to run your app locally.
+- **GitHub:** https://github.com/railo042410-netizen/vialtrack-cea
+- **Vercel:** https://vialtrack-cea.vercel.app
 
-View your app in AI Studio: https://ai.studio/apps/704937dd-8b5c-4531-983a-7f632e91111c
+## Módulos
 
-## Run Locally
+- **Registro de Instructor:** pensado para instalarse como PWA en el celular (incluye botón de instalación y captura de firmas táctiles).
+- **Panel de Oficina:** diseñado para usarse en PC (KPIs, filtros, firmas, flota e instructores).
 
-**Prerequisites:**  Node.js
+## Ejecutar localmente
 
+1. Copia `.env.example` a `.env.local` y rellena `VITE_SUPABASE_URL` y `VITE_SUPABASE_ANON_KEY`.
+2. Instala dependencias:
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+   ```bash
+   npm install --legacy-peer-deps
+   # o: bun install
+   ```
+
+3. Arranca el servidor:
+
+   ```bash
+   npm run dev
+   ```
+
+   La app queda en http://localhost:3000.
+
+## Base de datos
+
+La sincronización en la nube usa Supabase. Ejecuta `supabase_schema.sql` en el SQL Editor de tu proyecto y sigue la guía completa en `SUPABASE_SETUP.md`.
+
+El repositorio incluye `vercel.json` con el comando de instalación `npm install --legacy-peer-deps` y el directorio de salida `dist`.
