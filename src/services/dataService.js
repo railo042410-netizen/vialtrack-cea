@@ -15,21 +15,29 @@ const STORAGE_KEYS = {
   RECORDS: 'vialtrack_cea_records_v1',
   INSTRUCTORS: 'vialtrack_cea_instructors_v1',
   VEHICLES: 'vialtrack_cea_vehicles_v1',
+  LICENSES: 'vialtrack_cea_licenses_v1',
 };
 
 const OUTBOX_KEY = 'vialtrack_cea_outbox_v1';
 const CLOUD_SEEDED_KEY = 'vialtrack_cea_cloud_seeded_v1';
+const ACTIVATED_LICENSE_KEY = 'vialtrack_cea_activated_license_v1';
+
+// Código de administración: da acceso sin consumir licencia comercial.
+const ADMIN_LICENSE_CODE =
+  import.meta.env.VITE_ADMIN_LICENSE_KEY || 'REPORTVIAL-ADMIN';
 
 const CLOUD_COLLECTIONS = {
   records: 'cea_registros',
   instructors: 'cea_instructores',
   vehicles: 'cea_vehiculos',
+  licenses: 'cea_licencias',
 };
 
 const STORAGE_FOR_COLLECTION = {
   records: STORAGE_KEYS.RECORDS,
   instructors: STORAGE_KEYS.INSTRUCTORS,
   vehicles: STORAGE_KEYS.VEHICLES,
+  licenses: STORAGE_KEYS.LICENSES,
 };
 
 /**
@@ -462,9 +470,10 @@ async function writeSeedToCloud(seed) {
   }
 
   const groups = {
-    records: seed.records,
-    instructors: seed.instructors,
-    vehicles: seed.vehicles,
+    records: seed.records || [],
+    instructors: seed.instructors || [],
+    vehicles: seed.vehicles || [],
+    licenses: seed.licenses || [],
   };
 
   for (const [key, items] of Object.entries(groups)) {
@@ -590,16 +599,18 @@ async function prepareCloud() {
   if (!supabase || cloudReady) return;
 
   try {
-    const [records, instructors, vehicles] = await Promise.all([
+    const [records, instructors, vehicles, licenses] = await Promise.all([
       fetchTable(CLOUD_COLLECTIONS.records),
       fetchTable(CLOUD_COLLECTIONS.instructors),
       fetchTable(CLOUD_COLLECTIONS.vehicles),
+      fetchTable(CLOUD_COLLECTIONS.licenses),
     ]);
 
     const cloudIsEmpty =
       records.length === 0 &&
       instructors.length === 0 &&
-      vehicles.length === 0;
+      vehicles.length === 0 &&
+      licenses.length === 0;
     const alreadySeeded = localStorage.getItem(CLOUD_SEEDED_KEY) === '1';
 
     if (cloudIsEmpty && !alreadySeeded) {
@@ -607,6 +618,7 @@ async function prepareCloud() {
         records: readStorage(STORAGE_KEYS.RECORDS, () => []),
         instructors: readStorage(STORAGE_KEYS.INSTRUCTORS, () => DEFAULT_INSTRUCTORS),
         vehicles: readStorage(STORAGE_KEYS.VEHICLES, () => DEFAULT_VEHICLES),
+        licenses: readStorage(STORAGE_KEYS.LICENSES, () => []),
       });
       localStorage.setItem(CLOUD_SEEDED_KEY, '1');
     }
@@ -672,6 +684,11 @@ export async function initCloudSync() {
       'postgres_changes',
       { event: '*', schema: 'public', table: CLOUD_COLLECTIONS.vehicles },
       () => void refreshFromCloud('vehicles')
+    )
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: CLOUD_COLLECTIONS.licenses },
+      () => void refreshFromCloud('licenses')
     )
     .subscribe();
 
@@ -856,14 +873,157 @@ export const dataService = {
   },
 
   /**
+   * Catálogo de licencias comerciales.
+   * @returns {import('../types/cea').License[]}
+   */
+  getLicenses() {
+    return readStorage(STORAGE_KEYS.LICENSES, () => []);
+  },
+
+  /** Genera un código legible y único para una licencia. */
+  generateLicenseCode() {
+    const block = () =>
+      Math.random().toString(36).slice(2, 6).toUpperCase().padStart(4, '0');
+    return `RV-${block()}-${block()}`;
+  },
+
+  /**
+   * Crea una licencia (desactivada por defecto).
+   * @param {{ clientName: string; maxInstructors: number; maxVehicles: number; expiresAt: string }} input
+   * @returns {import('../types/cea').License}
+   */
+  addLicense({ clientName, maxInstructors, maxVehicles, expiresAt }) {
+    const list = this.getLicenses();
+    const created = {
+      id: `lic-${Date.now().toString(36)}`,
+      code: this.generateLicenseCode(),
+      clientName: clientName.trim() || 'Cliente',
+      maxInstructors: Math.max(0, Number(maxInstructors) || 0),
+      maxVehicles: Math.max(0, Number(maxVehicles) || 0),
+      expiresAt: expiresAt || '2099-12-31',
+      enabled: true,
+      isActive: false,
+      createdAt: new Date().toISOString(),
+    };
+    const updated = [...list, created];
+    localStorage.setItem(STORAGE_KEYS.LICENSES, JSON.stringify(updated));
+    enqueue({ collection: 'licenses', type: 'save', docId: created.id, payload: created });
+    notifyDataChanged();
+    return created;
+  },
+
+  /**
+   * Actualiza una licencia existente.
+   * @param {import('../types/cea').License} license
+   */
+  updateLicense(license) {
+    const updated = this.getLicenses().map((l) =>
+      l.id === license.id ? license : l
+    );
+    localStorage.setItem(STORAGE_KEYS.LICENSES, JSON.stringify(updated));
+    enqueue({ collection: 'licenses', type: 'save', docId: license.id, payload: license });
+    notifyDataChanged();
+    return updated;
+  },
+
+  /**
+   * Marca una licencia como la activa global (solo una puede estarlo).
+   * @param {string} id
+   */
+  activateLicense(id) {
+    const updated = this.getLicenses().map((l) => ({
+      ...l,
+      isActive: l.id === id,
+    }));
+    localStorage.setItem(STORAGE_KEYS.LICENSES, JSON.stringify(updated));
+    const target = updated.find((l) => l.id === id);
+    for (const license of updated) {
+      enqueue({
+        collection: 'licenses',
+        type: 'save',
+        docId: license.id,
+        payload: license,
+      });
+    }
+    notifyDataChanged();
+    return target || null;
+  },
+
+  /**
+   * Elimina una licencia del catálogo.
+   * @param {string} id
+   */
+  deleteLicense(id) {
+    const filtered = this.getLicenses().filter((l) => l.id !== id);
+    localStorage.setItem(STORAGE_KEYS.LICENSES, JSON.stringify(filtered));
+    enqueue({ collection: 'licenses', type: 'delete', docId: id });
+    notifyDataChanged();
+    return filtered;
+  },
+
+  /** Licencia global activa y vigente, o null. */
+  getActiveLicense() {
+    const today = formatDateOffset(0);
+    return (
+      this.getLicenses().find(
+        (l) => l.isActive && l.enabled && l.expiresAt >= today
+      ) || null
+    );
+  },
+
+  /** Valida un código para activar una licencia en este dispositivo. */
+  validateLicenseCode(code) {
+    const clean = (code || '').trim().toUpperCase();
+    if (!clean) return null;
+    if (clean === ADMIN_LICENSE_CODE.toUpperCase()) {
+      return { code: clean, clientName: 'Administración', isAdmin: true };
+    }
+    const today = formatDateOffset(0);
+    return (
+      this.getLicenses().find(
+        (l) =>
+          l.code.toUpperCase() === clean &&
+          l.enabled &&
+          l.expiresAt >= today
+      ) || null
+    );
+  },
+
+  /** Código activado en este dispositivo. */
+  getActivatedCode() {
+    try {
+      return localStorage.getItem(ACTIVATED_LICENSE_KEY) || '';
+    } catch {
+      return '';
+    }
+  },
+
+  /** Guarda el código activado en este dispositivo. */
+  setActivatedCode(code) {
+    try {
+      localStorage.setItem(ACTIVATED_LICENSE_KEY, code.trim().toUpperCase());
+    } catch {
+      // ignore
+    }
+    notifyDataChanged();
+  },
+
+  /** ¿Este dispositivo tiene una licencia válida activada? */
+  isDeviceLicensed() {
+    return Boolean(this.validateLicenseCode(this.getActivatedCode()));
+  },
+
+  /**
    * Vacía por completo los datos locales y de la nube para empezar de cero.
    * @returns {import('../types/cea').ClassRecord[]}
    */
   clearAllData() {
-    const empty = { records: [], instructors: [], vehicles: [] };
+    const empty = { records: [], instructors: [], vehicles: [], licenses: [] };
     localStorage.setItem(STORAGE_KEYS.RECORDS, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.INSTRUCTORS, JSON.stringify([]));
     localStorage.setItem(STORAGE_KEYS.VEHICLES, JSON.stringify([]));
+    localStorage.setItem(STORAGE_KEYS.LICENSES, JSON.stringify([]));
+    localStorage.removeItem(ACTIVATED_LICENSE_KEY);
     localStorage.setItem(CLOUD_SEEDED_KEY, '1');
     enqueue({ collection: 'all', type: 'reset_demo', docId: 'empty', payload: empty });
     notifyDataChanged();

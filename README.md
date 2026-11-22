@@ -8,7 +8,11 @@ PWA mobile-first para el control digital de asistencia, horas dictadas, kilometr
 ## Módulos
 
 - **Registro de Instructor:** pensado para instalarse como PWA en el celular (incluye botón de instalación y captura de firmas táctiles).
-- **Panel de Oficina:** diseñado para usarse en PC (KPIs, filtros, firmas, flota e instructores).
+- **Panel de Oficina:** diseñado para usarse en PC (KPIs, filtros, firmas, flota, instructores y **licencias**).
+
+## Licencias
+
+El módulo móvil exige activar un código de licencia antes de registrar. En el Panel de Oficina → **Licencias** puedes generar códigos, programar el cupo máximo de instructores y vehículos, definir vencimiento y activar una licencia global. El código de administración por defecto es `REPORTVIAL-ADMIN` (configurable con `VITE_ADMIN_LICENSE_KEY`).
 
 ## Ejecutar localmente
 

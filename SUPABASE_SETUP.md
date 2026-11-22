@@ -28,8 +28,8 @@ La app funciona sin configuración (modo local). Para activar la sincronización
 
 ## Comportamiento
 
-- En el primer arranque con Supabase configurado, los datos demo se suben una sola vez a las tres tablas.
+- La app arranca vacía: no se suben datos de demostración. Las tablas son `cea_registros`, `cea_instructores`, `cea_vehiculos` y `cea_licencias` (esta última guarda licencias con cupos y vencimiento).
 - Cada escritura/eliminación se guarda primero en la caché local (`localStorage`) y se encola; la cola se envía en cuanto hay conexión. El indicador de la cabecera muestra *Nube activa / Sincronizando (n) / Sin conexión*.
 - Realtime mantiene el panel de oficina y los formularios actualizados cuando otro dispositivo modifica los datos.
 - Si no hay conexión, los registros quedan como `pendiente_local` y se suben al recuperarse.
-- **Restaurar datos demo** (en el panel de oficina) reemplaza también las tres tablas en la nube.
+- **Vaciar datos** (en el panel de oficina) borra las cuatro tablas, tanto en local como en la nube.

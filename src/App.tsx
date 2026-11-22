@@ -6,6 +6,7 @@ import { InstructorForm } from './components/InstructorForm';
 import { OfficeDashboard } from './components/OfficeDashboard';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { CloudSyncBadge } from './components/CloudSyncBadge';
+import { LicenseGate } from './components/LicenseGate';
 import { useCloudSync } from './hooks/useCloudSync';
 import { COLOR_PALETTES, ColorPaletteId } from './utils/colorPalette';
 
@@ -36,11 +37,15 @@ export default function App() {
     return 'aurora';
   });
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  const [isLicensed, setIsLicensed] = useState<boolean>(() =>
+    dataService.isDeviceLicensed()
+  );
   const cloudSync = useCloudSync();
 
   // Los cambios en la nube (u otras pestañas) actualizan la vista en tiempo real.
   useEffect(() => {
     setRecords(dataService.getRecords());
+    setIsLicensed(dataService.isDeviceLicensed());
   }, [cloudSync.dataVersion]);
 
   useEffect(() => {
@@ -250,14 +255,18 @@ export default function App() {
         </div>
 
         {activeView === 'instructor' ? (
-          <InstructorForm
-            onRecordSaved={handleRecordSaved}
-            activePaletteInk={activePaletteMeta.inkHex}
-            onNavigateToOffice={() => {
-              setActiveView('office');
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-            }}
-          />
+          isLicensed ? (
+            <InstructorForm
+              onRecordSaved={handleRecordSaved}
+              activePaletteInk={activePaletteMeta.inkHex}
+              onNavigateToOffice={() => {
+                setActiveView('office');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+          ) : (
+            <LicenseGate onActivated={() => setIsLicensed(true)} />
+          )
         ) : (
           <OfficeDashboard
             records={records}

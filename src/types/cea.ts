@@ -18,6 +18,18 @@ export interface FleetVehicle {
   lastOdometer?: number;
 }
 
+export interface License {
+  id: string;
+  code: string;
+  clientName: string;
+  maxInstructors: number;
+  maxVehicles: number;
+  expiresAt: string; // YYYY-MM-DD
+  enabled: boolean;
+  isActive: boolean;
+  createdAt: string;
+}
+
 export interface ClassRecord {
   id: string;
   date: string; // YYYY-MM-DD
