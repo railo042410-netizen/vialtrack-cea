@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   Check,
   Copy,
@@ -16,10 +16,24 @@ import { useSyncState } from '../hooks/useCloudSync';
 export const MasterPanel: React.FC = () => {
   const { dataVersion } = useSyncState();
   const licenses = useMemo(() => dataService.getLicenses(), [dataVersion]);
-  const subaccounts = useMemo(
-    () => dataService.getSubaccounts(),
-    [dataVersion]
-  );
+  const [subaccounts, setSubaccounts] = useState<Subaccount[]>([]);
+  const [refresh, setRefresh] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      if (!supabase) return;
+      const { data } = await supabase
+        .from('cea_subcuentas')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (active) setSubaccounts((data as Subaccount[]) || []);
+    };
+    void load();
+    return () => {
+      active = false;
+    };
+  }, [dataVersion, refresh]);
 
   const [clientName, setClientName] = useState('');
   const [maxInstructors, setMaxInstructors] = useState('10');
@@ -97,6 +111,7 @@ export const MasterPanel: React.FC = () => {
       setFullName('');
       setLicenseId('');
       setRole('admin');
+      setRefresh((r) => r + 1);
     } catch {
       setSubError('No se pudo contactar con el servidor.');
     } finally {
