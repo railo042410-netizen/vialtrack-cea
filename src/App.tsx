@@ -22,7 +22,9 @@ import { COLOR_PALETTES, ColorPaletteId } from './utils/colorPalette';
 type ActiveView = 'instructor' | 'office';
 
 export default function App() {
-  const [activeView, setActiveView] = useState<ActiveView>('office');
+  const [activeView, setActiveView] = useState<ActiveView>(() =>
+    window.matchMedia('(max-width: 767px)').matches ? 'instructor' : 'office'
+  );
   const [records, setRecords] = useState<ClassRecord[]>(() =>
     dataService.getRecords()
   );
@@ -66,6 +68,18 @@ export default function App() {
     setIsLicensed(dataService.isDeviceLicensed());
     setInstructorReady(dataService.isInstructorSessionValid());
   }, [cloudSync.dataVersion]);
+
+  // En celular solo existe el registro de instructor.
+  useEffect(() => {
+    const enforceMobileView = () => {
+      if (window.matchMedia('(max-width: 767px)').matches) {
+        setActiveView('instructor');
+      }
+    };
+    enforceMobileView();
+    window.addEventListener('resize', enforceMobileView);
+    return () => window.removeEventListener('resize', enforceMobileView);
+  }, []);
 
   useEffect(() => {
     const root = document.documentElement;
