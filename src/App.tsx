@@ -15,6 +15,7 @@ import { InstructorAccessGate } from './components/InstructorAccessGate';
 import { OfficeDashboard } from './components/OfficeDashboard';
 import { OfflineIndicator } from './components/OfflineIndicator';
 import { CloudSyncBadge } from './components/CloudSyncBadge';
+import { BrandBanner } from './components/BrandBanner';
 import { LicenseGate } from './components/LicenseGate';
 import { useCloudSync } from './hooks/useCloudSync';
 import { COLOR_PALETTES, ColorPaletteId } from './utils/colorPalette';
@@ -287,6 +288,8 @@ export default function App() {
       </header>
 
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 pt-4 sm:pt-6">
+        <BrandBanner />
+
         <div className="no-print mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm px-4 py-2.5">
           <div className="flex items-center gap-2.5 text-xs">
             <Palette
