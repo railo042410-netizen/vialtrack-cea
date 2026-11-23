@@ -173,11 +173,9 @@ export const InstructorForm: React.FC<InstructorFormProps> = ({
       nextErrors.time = 'La hora de fin debe ser posterior a la hora de inicio.';
     }
 
-    if (!instructorId) {
-      nextErrors.instructor = 'Selecciona un instructor.';
-    }
     if (!instructorDocument.trim()) {
-      nextErrors.instructorDocument = 'Ingresa la identificación del instructor.';
+      nextErrors.instructorDocument =
+        'Selecciona un instructor o ingresa su identificación.';
     }
 
     if (!vehiclePlate.trim()) {
@@ -221,7 +219,8 @@ export const InstructorForm: React.FC<InstructorFormProps> = ({
       endTime,
       totalHours,
       instructorId,
-      instructorName: selectedInstructor?.name || 'Instructor CEA',
+      instructorName:
+        selectedInstructor?.name || `Instructor ${instructorDocument.trim()}`,
       instructorDocument: instructorDocument.trim(),
       classType: 'Práctica',
       licenseCategory,
