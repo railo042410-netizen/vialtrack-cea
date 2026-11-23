@@ -167,17 +167,7 @@ export default function App() {
       {/* Top Bar */}
       <header className="no-print sticky top-0 z-40 h-14 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/85 dark:bg-[#070B14]/85 backdrop-blur-md">
         <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-8 px-4 sm:px-6">
-          <a
-            href="#top"
-            onClick={(e) => {
-              e.preventDefault();
-              setActiveView('office');
-            }}
-            className="font-display text-base sm:text-lg font-bold tracking-tight whitespace-nowrap shrink-0 bg-clip-text text-transparent"
-            style={{ backgroundImage: 'var(--accent-gradient)' }}
-          >
-            REPORTEVIALCEA
-          </a>
+          <div className="hidden md:block" />
 
           <nav
             aria-label="Vistas principales"
@@ -242,6 +232,7 @@ export default function App() {
           </nav>
 
           <div className="flex items-center gap-2 shrink-0">
+            <BrandBanner />
             <button
               type="button"
               onClick={() => setShowLicenseSwitcher(true)}
@@ -288,8 +279,6 @@ export default function App() {
       </header>
 
       <main className="flex-1 mx-auto w-full max-w-7xl px-4 sm:px-6 pt-4 sm:pt-6">
-        <BrandBanner />
-
         <div className="no-print mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200/90 dark:border-slate-800/90 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm px-4 py-2.5">
           <div className="flex items-center gap-2.5 text-xs">
             <Palette
