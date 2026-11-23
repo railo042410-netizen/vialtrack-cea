@@ -856,27 +856,42 @@ export const dataService = {
    * @returns {import('../types/cea').FleetVehicle[]}
    */
   getVehicles() {
-    return this.filterByLicense(
-      readStorage(STORAGE_KEYS.VEHICLES, () => DEFAULT_VEHICLES)
-    );
+    const raw = readStorage(STORAGE_KEYS.VEHICLES, () => DEFAULT_VEHICLES);
+    const normalized = raw.map((v) => ({
+      ...v,
+      categories:
+        Array.isArray(v.categories) && v.categories.length > 0
+          ? v.categories
+          : v.category
+            ? [v.category]
+            : [],
+    }));
+    return this.filterByLicense(normalized);
   },
 
   /**
    * Registra una nueva placa en la flota de la academia.
-   * @param {{ plate: string; model: string; category: import('../types/cea').LicenseCategory }} input
+   * @param {{ plate: string; model: string; categories?: import('../types/cea').LicenseCategory[]; category?: import('../types/cea').LicenseCategory }} input
    * @returns {{ vehicle: import('../types/cea').FleetVehicle; vehicles: import('../types/cea').FleetVehicle[] }}
    */
-  addVehicle({ plate, model, category }) {
+  addVehicle({ plate, model, categories, category }) {
     const cleanPlate = plate.trim().toUpperCase();
     const list = this.getVehicles();
     const existing = list.find((v) => v.plate.toUpperCase() === cleanPlate);
     if (existing) {
       return { vehicle: existing, vehicles: list };
     }
+    const cats =
+      Array.isArray(categories) && categories.length > 0
+        ? categories
+        : category
+          ? [category]
+          : ['B1'];
     const created = {
       plate: cleanPlate,
-      model: model.trim() || `Vehículo Cat. ${category}`,
-      category,
+      model: model.trim() || `Vehículo Cat. ${cats.join('/')}`,
+      categories: cats,
+      category: cats[0], // compatibilidad con registros anteriores
       licenseId: this.getCurrentLicenseId() || undefined,
     };
     const updated = [...list, created];

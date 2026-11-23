@@ -129,17 +129,17 @@ export const InstructorForm: React.FC<InstructorFormProps> = ({
 
   // Filter fleet suggestions matching category and separate the rest
   const matchingVehicles = useMemo(
-    () => vehicles.filter((v) => v.category === licenseCategory),
+    () => vehicles.filter((v) => v.categories.includes(licenseCategory)),
     [vehicles, licenseCategory]
   );
   const otherVehicles = useMemo(
-    () => vehicles.filter((v) => v.category !== licenseCategory),
+    () => vehicles.filter((v) => !v.categories.includes(licenseCategory)),
     [vehicles, licenseCategory]
   );
 
   const handleCategoryChange = (cat: LicenseCategory) => {
     setLicenseCategory(cat);
-    const catVehicles = vehicles.filter((v) => v.category === cat);
+    const catVehicles = vehicles.filter((v) => v.categories.includes(cat));
     const stillMatches = catVehicles.some(
       (v) => v.plate.toUpperCase() === vehiclePlate.toUpperCase()
     );
@@ -562,12 +562,15 @@ export const InstructorForm: React.FC<InstructorFormProps> = ({
                   id="input-instructor-doc"
                   type="text"
                   value={instructorDocument}
-                  readOnly
-                  placeholder="Se completa al elegir el instructor"
-                  className="accent-focus w-full min-h-[46px] rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-100 dark:bg-slate-950 px-3.5 text-sm font-mono tabular-nums text-slate-700 dark:text-slate-300 transition-all"
+                  onChange={(e) => {
+                    setInstructorDocument(e.target.value);
+                    setErrors((p) => ({ ...p, instructorDocument: '' }));
+                  }}
+                  placeholder="Ej. 79.845.210"
+                  className="accent-focus w-full min-h-[46px] rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 text-sm font-mono tabular-nums text-slate-900 dark:text-slate-100 transition-all"
                 />
                 <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                  Se carga automáticamente al elegir el instructor.
+                  Se completa al elegir el instructor. Si no aparece, escríbelo manualmente.
                 </p>
                 {errors.instructorDocument && (
                   <p className="mt-1 text-xs text-rose-500">
@@ -649,7 +652,7 @@ export const InstructorForm: React.FC<InstructorFormProps> = ({
                     <optgroup label={`Vehículos Categoría ${licenseCategory}`}>
                       {matchingVehicles.map((v) => (
                         <option key={v.plate} value={v.plate}>
-                          {v.plate} — {v.model} ({v.category})
+                          {v.plate} — {v.model} ({v.categories.join('/')})
                         </option>
                       ))}
                     </optgroup>
@@ -658,7 +661,7 @@ export const InstructorForm: React.FC<InstructorFormProps> = ({
                     <optgroup label="Otras placas de la academia">
                       {otherVehicles.map((v) => (
                         <option key={v.plate} value={v.plate}>
-                          {v.plate} — {v.model} ({v.category})
+                          {v.plate} — {v.model} ({v.categories.join('/')})
                         </option>
                       ))}
                     </optgroup>

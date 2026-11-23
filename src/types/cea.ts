@@ -14,7 +14,11 @@ export interface Instructor {
 export interface FleetVehicle {
   plate: string;
   model: string;
-  category: LicenseCategory;
+  /** Categorías de licencia que puede atender este vehículo. */
+  categories: LicenseCategory[];
+  /** Compatibilidad con registros anteriores de una sola categoría. */
+  category?: LicenseCategory;
+  licenseId?: string;
   lastOdometer?: number;
 }
 

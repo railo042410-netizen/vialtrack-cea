@@ -170,7 +170,7 @@ export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
   );
   const [newPlate, setNewPlate] = useState('');
   const [newModel, setNewModel] = useState('');
-  const [newCategory, setNewCategory] = useState<LicenseCategory>('B1');
+  const [newCategories, setNewCategories] = useState<LicenseCategory[]>(['B1']);
   const [fleetError, setFleetError] = useState('');
 
   // Instructors manager modal state
@@ -189,6 +189,13 @@ export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
     setInstructors(dataService.getInstructors());
   }, [dataVersion]);
 
+  const toggleNewCategory = (cat: LicenseCategory) => {
+    setNewCategories((prev) =>
+      prev.includes(cat) ? prev.filter((c) => c !== cat) : [...prev, cat]
+    );
+    setFleetError('');
+  };
+
   const handleAddFleetPlate = () => {
     const clean = newPlate.trim().toUpperCase();
     if (!clean) {
@@ -206,14 +213,19 @@ export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
       );
       return;
     }
+    if (newCategories.length === 0) {
+      setFleetError('Selecciona al menos una categoría.');
+      return;
+    }
     const { vehicles: updated } = dataService.addVehicle({
       plate: clean,
       model: newModel.trim(),
-      category: newCategory,
+      categories: newCategories,
     });
     setVehicles(updated);
     setNewPlate('');
     setNewModel('');
+    setNewCategories(['B1']);
     setFleetError('');
   };
 
@@ -1106,20 +1118,31 @@ export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
                   placeholder="Vehículo / Modelo"
                   className="accent-focus w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3.5 text-sm text-slate-900 dark:text-slate-100"
                 />
-                <select
-                  aria-label="Categoría"
-                  value={newCategory}
-                  onChange={(e) =>
-                    setNewCategory(e.target.value as LicenseCategory)
-                  }
-                  className="accent-focus w-full min-h-[44px] rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 px-3 text-sm font-mono text-slate-900 dark:text-slate-100"
-                >
-                  {LICENSE_CATEGORIES.map((c) => (
-                    <option key={c.code} value={c.code}>
-                      Cat. {c.code}
-                    </option>
-                  ))}
-                </select>
+              </div>
+              <div>
+                <span className="block text-xs font-medium text-slate-600 dark:text-slate-400 mb-2">
+                  Categorías que puede atender
+                </span>
+                <div className="grid grid-cols-5 gap-2">
+                  {LICENSE_CATEGORIES.map((c) => {
+                    const active = newCategories.includes(c.code);
+                    const theme = CATEGORY_COLOR_THEMES[c.code];
+                    return (
+                      <button
+                        key={c.code}
+                        type="button"
+                        onClick={() => toggleNewCategory(c.code)}
+                        className={`min-h-[42px] rounded-xl border font-mono text-xs font-bold transition-all ${
+                          active
+                            ? theme.activeBg
+                            : `border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-950 text-slate-700 dark:text-slate-300 ${theme.idleHover}`
+                        }`}
+                      >
+                        {c.code}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               {fleetError && (
                 <p className="text-xs text-rose-500">{fleetError}</p>
@@ -1141,7 +1164,12 @@ export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
                 </p>
               ) : (
                 vehicles.map((v) => {
-                  const catTheme = CATEGORY_COLOR_THEMES[v.category];
+                  const cats =
+                    v.categories && v.categories.length > 0
+                      ? v.categories
+                      : v.category
+                        ? [v.category]
+                        : [];
                   return (
                     <div
                       key={v.plate}
@@ -1152,8 +1180,15 @@ export const OfficeDashboard: React.FC<OfficeDashboardProps> = ({
                           {v.plate}
                         </span>
                         <span className="mx-2 text-slate-400">·</span>
-                        <span className={`font-mono text-xs font-bold ${catTheme.text}`}>
-                          {v.category}
+                        <span className="inline-flex flex-wrap gap-1">
+                          {cats.map((c) => (
+                            <span
+                              key={c}
+                              className={`font-mono text-xs font-bold ${CATEGORY_COLOR_THEMES[c].text}`}
+                            >
+                              {c}
+                            </span>
+                          ))}
                         </span>
                         <span className="mx-2 text-slate-400">·</span>
                         <span className="text-xs text-slate-600 dark:text-slate-400">
