@@ -167,7 +167,7 @@ export default function App() {
       {/* Top Bar */}
       <header className="no-print sticky top-0 z-40 h-14 border-b border-slate-200/80 dark:border-slate-800/80 bg-white/85 dark:bg-[#070B14]/85 backdrop-blur-md">
         <div className="mx-auto flex h-full max-w-7xl items-center justify-between gap-8 px-4 sm:px-6">
-          <div className="hidden md:block" />
+          <BrandBanner />
 
           <nav
             aria-label="Vistas principales"
@@ -232,7 +232,6 @@ export default function App() {
           </nav>
 
           <div className="flex items-center gap-2 shrink-0">
-            <BrandBanner />
             <button
               type="button"
               onClick={() => setShowLicenseSwitcher(true)}
