@@ -23,9 +23,12 @@ import { COLOR_PALETTES, ColorPaletteId } from './utils/colorPalette';
 type ActiveView = 'instructor' | 'office';
 
 export default function App() {
-  const [activeView, setActiveView] = useState<ActiveView>(() =>
-    window.matchMedia('(max-width: 767px)').matches ? 'instructor' : 'office'
-  );
+  const [activeView, setActiveView] = useState<ActiveView>(() => {
+    const isMobile = window.matchMedia('(max-width: 767px)').matches;
+    return isMobile && !dataService.isMasterLicenseActive()
+      ? 'instructor'
+      : 'office';
+  });
   const [records, setRecords] = useState<ClassRecord[]>(() =>
     dataService.getRecords()
   );
@@ -70,17 +73,20 @@ export default function App() {
     setInstructorReady(dataService.isInstructorSessionValid());
   }, [cloudSync.dataVersion]);
 
-  // En celular/tablet solo existe el registro de instructor.
+  // En celular, solo la licencia maestra habilita también el Panel de Oficina.
   useEffect(() => {
     const enforceMobileView = () => {
-      if (window.matchMedia('(max-width: 767px)').matches) {
+      if (
+        window.matchMedia('(max-width: 767px)').matches &&
+        !dataService.isMasterLicenseActive()
+      ) {
         setActiveView('instructor');
       }
     };
     enforceMobileView();
     window.addEventListener('resize', enforceMobileView);
     return () => window.removeEventListener('resize', enforceMobileView);
-  }, []);
+  }, [isMasterLicense]);
 
   useEffect(() => {
     const root = document.documentElement;
@@ -362,7 +368,35 @@ export default function App() {
         aria-label="Navegación móvil"
         className="no-print md:hidden fixed bottom-0 left-0 right-0 z-40 border-t border-slate-200 dark:border-slate-800 bg-white/95 dark:bg-[#070B14]/95 backdrop-blur-md pb-safe"
       >
-        <div className="grid grid-cols-1 h-14">
+        <div className={`grid h-14 ${isMasterLicense ? 'grid-cols-2' : 'grid-cols-1'}`}>
+          {isMasterLicense && (
+            <button
+              type="button"
+              onClick={() => {
+                if (selectedLicense) dataService.bindOfficeDevice(selectedLicense);
+                setActiveView('office');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              style={
+                activeView === 'office'
+                  ? { color: 'var(--accent-text)' }
+                  : undefined
+              }
+              className={`relative flex flex-col items-center justify-center gap-0.5 text-[11px] font-medium transition-colors ${
+                activeView === 'office' ? '' : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              {activeView === 'office' && (
+                <span
+                  className="absolute top-0 inset-x-6 h-0.5 rounded-b-full"
+                  style={{ backgroundImage: 'var(--accent-gradient)' }}
+                />
+              )}
+              <LayoutDashboard className="w-5 h-5" />
+              <span>Panel Oficina</span>
+            </button>
+          )}
+
           <button
             type="button"
             onClick={() => {
